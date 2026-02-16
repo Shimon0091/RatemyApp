@@ -1,0 +1,255 @@
+{
+  "app": {
+    "name": "דירגון",
+    "tagline": "השומר של השוכרים",
+    "description": "פלטפורמת דירוג דירות להשכרה בתל אביב"
+  },
+  "nav": {
+    "home": "דף הבית",
+    "about": "אודות",
+    "writeReview": "כתוב דירגון",
+    "login": "התחבר",
+    "logout": "התנתק",
+    "profile": "הפרופיל שלי",
+    "myReviews": "הדירגונים שלי",
+    "admin": "ניהול"
+  },
+  "hero": {
+    "title": "שוקל להשכיר דירה?",
+    "subtitle": "בוא תשמע קצת ביקורת עליה",
+    "description": "דירגון עוזר לך למצוא דירות איכותיות ולהימנע מדירות בעייתיות",
+    "searchPlaceholder": "חפש לפי רחוב או כתובת...",
+    "ctaWrite": "כתוב ביקורת",
+    "ctaSearch": "חפש דירה"
+  },
+  "stats": {
+    "reviews": "ביקורות",
+    "properties": "דירות",
+    "users": "משתמשים"
+  },
+  "review": {
+    "title": "ביקורת",
+    "writeReview": "כתוב ביקורת",
+    "editReview": "ערוך ביקורת",
+    "deleteReview": "מחק ביקורת",
+    "yourReview": "הביקורת שלך",
+    "reviewText": "טקסט הביקורת",
+    "ratings": "דירוגים",
+    "helpful": "האם זה עזר לך?",
+    "yes": "כן",
+    "no": "לא",
+    "report": "דווח",
+    "edit": "ערוך",
+    "delete": "מחק",
+    "pending": "ממתין לאישור",
+    "approved": "אושר",
+    "rejected": "נדחה"
+  },
+  "rating": {
+    "overall": "דירוג כללי",
+    "maintenance": "איכות תחזוקה",
+    "communication": "תקשורת עם בעל הבית",
+    "value": "יחס מחיר-ערך",
+    "contractCompliance": "עמידה בתנאי החוזה",
+    "timelyRepairs": "תיקונים בזמן סביר"
+  },
+  "property": {
+    "address": "כתובת",
+    "street": "רחוב",
+    "building": "מספר בניין",
+    "floor": "קומה",
+    "apartment": "דירה",
+    "city": "עיר",
+    "details": "פרטי הנכס",
+    "reviews": "ביקורות",
+    "noReviews": "אין ביקורות עדיין",
+    "averageRating": "ממוצע דירוג",
+    "totalReviews": "סה\"כ ביקורות",
+    "notFound": "הדירה לא נמצאה",
+    "basedOn": "מבוסס על",
+    "depositReturned": "החזרת פיקדון במלואו",
+    "contractRespected": "עמידה בתנאי החוזה",
+    "timelyRepairs": "תיקונים בזמן סביר",
+    "noReviewsYet": "עדיין אין דירגונים על הדירה הזו",
+    "beFirst": "היה הראשון לכתוב דירגון ולעזור לשוכרים אחרים!",
+    "writeFirstReview": "כתוב את הדירגון הראשון",
+    "reviewsTitle": "דירגונים",
+    "sortNewest": "הכי חדשים",
+    "sortHelpful": "הכי מועילים",
+    "sortHighRating": "דירוג גבוה",
+    "sortLowRating": "דירוג נמוך",
+    "livedHere": "גרת בדירה הזו?",
+    "shareExperience": "שתף את החוויה שלך ועזור לשוכרים אחרים!",
+    "writeReviewCta": "כתוב דירגון על הדירה"
+  },
+  "tags": {
+    "depositReturned": "פיקדון הוחזר במלואו",
+    "contractRespected": "עמידה בתנאי החוזה",
+    "maintenanceTimely": "תיקונים בזמן",
+    "responsive": "תקשורת מהירה",
+    "clean": "נקייה",
+    "quiet": "שקט"
+  },
+  "common": {
+    "loading": "טוען נתונים...",
+    "error": "שגיאה",
+    "backToHome": "חזור לדף הבית",
+    "yes": "כן",
+    "no": "לא",
+    "skipToMain": "דלג לתוכן הראשי"
+  },
+  "search": {
+    "results": "תוצאות חיפוש",
+    "found": "נמצאו",
+    "propertiesFor": "דירות עבור",
+    "searching": "מחפש דירות...",
+    "reviews": "דירגונים",
+    "noResults": "לא נמצאו דירות",
+    "noResultsFor": "לא נמצאו דירות עבור",
+    "tryDifferent": "נסה לחפש במילים אחרות",
+    "writeFirst": "כתוב דירגון ראשון על דירה זו",
+    "searchProperties": "חפש דירות",
+    "useSearchBar": "השתמש בשדה החיפוש למעלה כדי למצוא דירות"
+  },
+  "profile": {
+    "loadingProfile": "טוען פרופיל...",
+    "totalReviews": "סה\"כ דירגונים",
+    "approvedReviews": "דירגונים מאושרים",
+    "pendingReviews": "ממתינים לאישור",
+    "myReviews": "הדירגונים שלי",
+    "writeNew": "כתוב דירגון חדש",
+    "propertyNotAvailable": "דירה לא זמינה",
+    "viewProperty": "צפה בדירה",
+    "noReviewsYet": "עדיין לא כתבת דירגונים",
+    "startWriting": "התחל לכתוב דירגונים ולעזור לשוכרים אחרים!",
+    "writeFirstReview": "כתוב דירגון ראשון",
+    "deleteSuccess": "הדירגון נמחק בהצלחה",
+    "deleteModal": {
+      "title": "מחיקת דירגון",
+      "description": "האם אתה בטוח שברצונך למחוק את הדירגון הזה?",
+      "warning": "פעולה זו אינה ניתנת לביטול.",
+      "confirm": "מחק דירגון"
+    }
+  },
+  "reviewCard": {
+    "anonymousRenter": "שוכר אנונימי",
+    "rentalPeriod": "תקופת שכירות",
+    "wasHelpful": "האם הביקורת הזאת עזרה לך?",
+    "yes": "כן",
+    "no": "לא",
+    "report": "דווח",
+    "reported": "דווח",
+    "reportTitle": "דווח על ביקורת בעייתית",
+    "reportModal": {
+      "title": "דיווח על ביקורת",
+      "description": "אם הביקורת הזו מכילה תוכן פוגעני, שקרי או בעייתי, אנא דווח לנו.",
+      "reason": "סיבת הדיווח",
+      "selectReason": "בחר סיבה...",
+      "spam": "ספאם או פרסומת",
+      "fake": "ביקורת מזויפת",
+      "offensive": "תוכן פוגעני",
+      "personalInfo": "מכיל מידע אישי",
+      "wrongProperty": "דירה לא נכונה",
+      "other": "אחר",
+      "details": "פרטים נוספים",
+      "detailsPlaceholder": "הסבר נוסף...",
+      "submit": "שלח דיווח"
+    }
+  },
+  "footer": {
+    "description": "פלטפורמה לדירוג ושיתוף חוויות של שוכרי דירות בתל אביב. עזרו לשוכרים אחרים לקבל החלטות מושכלות!",
+    "quickLinks": "קישורים מהירים",
+    "searchProperties": "חיפוש דירות",
+    "information": "מידע",
+    "terms": "תנאי שימוש",
+    "privacy": "מדיניות פרטיות",
+    "contact": "צור קשר",
+    "faq": "שאלות נפוצות",
+    "allRights": "כל הזכויות שמורות.",
+    "builtWith": "נבנה באהבה לשוכרים בתל אביב"
+  },
+  "pagination": {
+    "previous": "הקודם",
+    "next": "הבא",
+    "page": "עמוד",
+    "of": "מתוך"
+  },
+  "filters": {
+    "title": "סינון",
+    "minRating": "דירוג מינימלי",
+    "neighborhood": "שכונה",
+    "allNeighborhoods": "כל השכונות",
+    "minReviews": "מינימום דירגונים",
+    "anyReviews": "כל מספר",
+    "sortBy": "מיין לפי",
+    "apply": "החל סינון",
+    "clear": "נקה סינון"
+  },
+  "editReview": {
+    "title": "ערוך דירגון",
+    "notFound": "הדירגון לא נמצא",
+    "cannotEditRejected": "לא ניתן לערוך דירגון שנדחה",
+    "reviewTextRequired": "יש להזין טקסט ביקורת",
+    "allRatingsRequired": "יש למלא את כל הדירוגים",
+    "success": "הדירגון עודכן בהצלחה!",
+    "save": "שמור שינויים",
+    "notice": {
+      "title": "שים לב",
+      "description": "לאחר עריכת הדירגון, הוא יועבר לאישור מנהל מחדש."
+    }
+  },
+  "form": {
+    "required": "שדה חובה",
+    "optional": "אופציונלי",
+    "submit": "שלח",
+    "cancel": "בטל",
+    "save": "שמור",
+    "continue": "המשך",
+    "back": "חזור",
+    "next": "הבא",
+    "prev": "הקודם",
+    "loading": "טוען...",
+    "submitting": "שולח...",
+    "email": "אימייל",
+    "password": "סיסמה",
+    "confirmPassword": "אימות סיסמה"
+  },
+  "auth": {
+    "login": "התחבר",
+    "signup": "הרשם",
+    "signout": "התנתק",
+    "loginWith": "התחבר עם",
+    "signupWith": "הירשם עם",
+    "google": "Google",
+    "apple": "Apple",
+    "email": "אימייל",
+    "noAccount": "אין לך חשבון?",
+    "hasAccount": "יש לך כבר חשבון?",
+    "forgotPassword": "שכחת סיסמה?",
+    "required": "נדרש להיות מחובר",
+    "loginNow": "התחבר עכשיו"
+  },
+  "error": {
+    "generic": "אירעה שגיאה. אנא נסה שוב.",
+    "network": "בעיית רשת. בדוק את החיבור שלך.",
+    "notFound": "הדף לא נמצא",
+    "unauthorized": "אין לך הרשאה לצפות בדף זה",
+    "validation": "אנא מלא את כל השדות הנדרשים"
+  },
+  "success": {
+    "reviewSubmitted": "הביקורת נשלחה בהצלחה!",
+    "reviewUpdated": "הביקורת עודכנה בהצלחה!",
+    "reviewDeleted": "הביקורת נמחקה בהצלחה!",
+    "loginSuccess": "התחברת בהצלחה!",
+    "signupSuccess": "נרשמת בהצלחה!"
+  },
+  "admin": {
+    "dashboard": "לוח בקרה",
+    "pendingReviews": "ביקורות ממתינות",
+    "allReviews": "כל הביקורות",
+    "reports": "דיווחים",
+    "approve": "אשר",
+    "reject": "דחה",
+    "noData": "אין נתונים להצגה"
+  }
+}
