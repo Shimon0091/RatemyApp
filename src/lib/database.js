@@ -66,9 +66,21 @@ export async function searchProperties(query, options = {}) {
     .from('properties')
     .select('*', { count: 'exact' })
 
-  // Search by street or city
+  // Search by street or city — split query into parts for better matching
   if (query) {
-    dbQuery = dbQuery.or(`street.ilike.%${query}%,city.ilike.%${query}%`)
+    // Split by commas and spaces to handle Google Places format like "ביאליק 56, רמת גן, ישראל"
+    const parts = query.split(',').map(p => p.trim()).filter(Boolean)
+    const orConditions = []
+    for (const part of parts) {
+      // Skip generic terms like "ישראל"
+      if (part === 'ישראל' || part === 'Israel') continue
+      orConditions.push(`street.ilike.%${part}%`)
+      orConditions.push(`city.ilike.%${part}%`)
+    }
+    // Also search the full query as-is
+    orConditions.push(`street.ilike.%${query}%`)
+    orConditions.push(`city.ilike.%${query}%`)
+    dbQuery = dbQuery.or(orConditions.join(','))
   }
 
   // Filter by minimum rating
