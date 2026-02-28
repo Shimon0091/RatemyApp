@@ -55,50 +55,47 @@ export default function WriteReviewPage() {
   const [error, setError] = useState('');
 
   // Load Google Maps SDK
-  const autocompleteServiceRef = useRef(null);
-  const placesServiceRef = useRef(null);
-  const placesContainerRef = useRef(null);
+  const [mapsReady, setMapsReady] = useState(false);
 
   useEffect(() => {
     if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) return;
 
     const loadGoogleMaps = () => {
-      if (window.google?.maps?.places) {
-        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-        // PlacesService needs a DOM element or map
-        const div = document.createElement('div');
-        placesServiceRef.current = new window.google.maps.places.PlacesService(div);
-        return;
-      }
-      // Check if script is already loading
-      if (document.querySelector('script[src*="maps.googleapis.com"]')) {
-        const check = setInterval(() => {
-          if (window.google?.maps?.places) {
-            clearInterval(check);
-            autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-            const div = document.createElement('div');
-            placesServiceRef.current = new window.google.maps.places.PlacesService(div);
-          }
-        }, 100);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=he`;
-      script.async = true;
-      script.onload = () => {
-        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-        const div = document.createElement('div');
-        placesServiceRef.current = new window.google.maps.places.PlacesService(div);
-      };
-      document.head.appendChild(script);
+      return new Promise((resolve) => {
+        if (window.google?.maps?.places?.AutocompleteSuggestion) {
+          resolve();
+          return;
+        }
+        if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+          const check = setInterval(() => {
+            if (window.google?.maps?.places?.AutocompleteSuggestion) {
+              clearInterval(check);
+              resolve();
+            }
+          }, 100);
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=he&loading=async`;
+        script.async = true;
+        script.onload = () => {
+          const check = setInterval(() => {
+            if (window.google?.maps?.places?.AutocompleteSuggestion) {
+              clearInterval(check);
+              resolve();
+            }
+          }, 50);
+        };
+        document.head.appendChild(script);
+      });
     };
 
-    loadGoogleMaps();
+    loadGoogleMaps().then(() => setMapsReady(true));
   }, []);
 
-  // Google Places Autocomplete
+  // Google Places Autocomplete using new API
   useEffect(() => {
-    if (!street || street.length < 3 || !autocompleteServiceRef.current) {
+    if (!street || street.length < 3 || !mapsReady) {
       setSuggestions([]);
       return;
     }
@@ -108,31 +105,38 @@ export default function WriteReviewPage() {
     }
 
     setIsLoadingPlaces(true);
+    let cancelled = false;
 
-    const timeoutId = setTimeout(() => {
-      autocompleteServiceRef.current.getPlacePredictions(
-        {
+    const timeoutId = setTimeout(async () => {
+      try {
+        const { suggestions: results } = await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
           input: street,
-          componentRestrictions: { country: 'il' },
+          includedRegionCodes: ['il'],
           language: 'he',
-        },
-        (predictions, status) => {
-          setIsLoadingPlaces(false);
-          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-            setSuggestions(predictions);
-            setShowSuggestions(true);
-          } else {
-            setSuggestions([]);
-          }
+        });
+
+        if (!cancelled && results && results.length > 0) {
+          setSuggestions(results);
+          setShowSuggestions(true);
+        } else if (!cancelled) {
+          setSuggestions([]);
         }
-      );
+      } catch (err) {
+        logger.error('Places API error:', err);
+        if (!cancelled) setSuggestions([]);
+      } finally {
+        if (!cancelled) setIsLoadingPlaces(false);
+      }
     }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, [street]);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [street, mapsReady]);
 
   const handleSelectPlace = async (placeId, description) => {
-    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX') || !placesServiceRef.current) {
+    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) {
       const parts = description.split(',');
       if (parts.length > 0) setStreet(parts[0].trim());
       if (parts.length > 1) setCity(parts[1].trim());
@@ -141,49 +145,39 @@ export default function WriteReviewPage() {
       return;
     }
     try {
-      placesServiceRef.current.getDetails(
-        { placeId, fields: ['address_components'] },
-        (place, status) => {
-          if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-            const addressComponents = place.address_components || [];
+      const place = new window.google.maps.places.Place({ id: placeId });
+      await place.fetchFields({ fields: ['addressComponents'] });
 
-            let streetName = '';
-            let streetNumber = '';
-            let cityName = '';
+      const addressComponents = place.addressComponents || [];
 
-            for (const component of addressComponents) {
-              if (component.types.includes('route')) {
-                streetName = component.long_name;
-              }
-              if (component.types.includes('street_number')) {
-                streetNumber = component.long_name;
-              }
-              if (component.types.includes('locality')) {
-                cityName = component.long_name;
-              }
-            }
+      let streetName = '';
+      let streetNumber = '';
+      let cityName = '';
 
-            setStreet(streetName);
-            setBuildingNumber(streetNumber);
-            setCity(cityName);
-          } else {
-            const parts = description.split(',');
-            if (parts.length > 0) setStreet(parts[0].trim());
-            if (parts.length > 1) setCity(parts[1].trim());
-          }
-
-          setSuggestions([]);
-          setShowSuggestions(false);
+      for (const component of addressComponents) {
+        if (component.types.includes('route')) {
+          streetName = component.longText;
         }
-      );
+        if (component.types.includes('street_number')) {
+          streetNumber = component.longText;
+        }
+        if (component.types.includes('locality')) {
+          cityName = component.longText;
+        }
+      }
+
+      setStreet(streetName);
+      setBuildingNumber(streetNumber);
+      setCity(cityName);
     } catch (err) {
       logger.error('Error getting place details:', err);
       const parts = description.split(',');
       if (parts.length > 0) setStreet(parts[0].trim());
       if (parts.length > 1) setCity(parts[1].trim());
-      setSuggestions([]);
-      setShowSuggestions(false);
     }
+
+    setSuggestions([]);
+    setShowSuggestions(false);
   };
 
   useEffect(() => {
@@ -429,28 +423,34 @@ export default function WriteReviewPage() {
                   {/* Suggestions dropdown */}
                   {showSuggestions && suggestions.length > 0 && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-medium max-h-60 overflow-y-auto animate-slide-down">
-                      {suggestions.map((suggestion) => (
-                        <button
-                          key={suggestion.place_id}
-                          type="button"
-                          onClick={() => handleSelectPlace(suggestion.place_id, suggestion.description)}
-                          className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
-                        >
-                          <div className="flex items-start gap-2">
-                            <Icon.MapPin className="text-primary-600 flex-shrink-0 mt-1" />
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900">
-                                {suggestion.structured_formatting?.main_text || suggestion.description}
-                              </div>
-                              {suggestion.structured_formatting?.secondary_text && (
-                                <div className="text-sm text-gray-500">
-                                  {suggestion.structured_formatting.secondary_text}
+                      {suggestions.map((suggestion, index) => {
+                        const prediction = suggestion.placePrediction;
+                        const text = prediction?.text?.text || '';
+                        const mainText = prediction?.mainText?.text || text;
+                        const secondaryText = prediction?.secondaryText?.text || '';
+                        return (
+                          <button
+                            key={prediction?.placeId || index}
+                            type="button"
+                            onClick={() => handleSelectPlace(prediction?.placeId, text)}
+                            className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Icon.MapPin className="text-primary-600 flex-shrink-0 mt-1" />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">
+                                  {mainText}
                                 </div>
-                              )}
+                                {secondaryText && (
+                                  <div className="text-sm text-gray-500">
+                                    {secondaryText}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </button>
-                      ))}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 

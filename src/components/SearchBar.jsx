@@ -1,44 +1,48 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
 // Load Google Maps script once
-let googleMapsLoaded = false;
-let googleMapsLoading = false;
+let googleMapsLoadPromise = null;
 const loadGoogleMaps = () => {
-  return new Promise((resolve, reject) => {
-    if (window.google?.maps?.places) {
-      googleMapsLoaded = true;
+  if (googleMapsLoadPromise) return googleMapsLoadPromise;
+
+  googleMapsLoadPromise = new Promise((resolve, reject) => {
+    if (window.google?.maps?.places?.AutocompleteSuggestion) {
       resolve();
       return;
     }
-    if (googleMapsLoading) {
-      // Wait for existing load
+    // Check if script tag already exists
+    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
       const check = setInterval(() => {
-        if (window.google?.maps?.places) {
+        if (window.google?.maps?.places?.AutocompleteSuggestion) {
           clearInterval(check);
-          googleMapsLoaded = true;
           resolve();
         }
       }, 100);
       return;
     }
-    googleMapsLoading = true;
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=he`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=he&loading=async`;
     script.async = true;
     script.onload = () => {
-      googleMapsLoaded = true;
-      googleMapsLoading = false;
-      resolve();
+      // Wait for the places library to be fully available
+      const check = setInterval(() => {
+        if (window.google?.maps?.places?.AutocompleteSuggestion) {
+          clearInterval(check);
+          resolve();
+        }
+      }, 50);
     };
     script.onerror = (err) => {
-      googleMapsLoading = false;
+      googleMapsLoadPromise = null;
       reject(err);
     };
     document.head.appendChild(script);
   });
+
+  return googleMapsLoadPromise;
 };
 
 export default function SearchBar() {
@@ -48,49 +52,54 @@ export default function SearchBar() {
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false)
   const [mapsReady, setMapsReady] = useState(false)
   const autocompleteRef = useRef(null)
-  const autocompleteService = useRef(null)
   const navigate = useNavigate()
 
   // Load Google Maps SDK
   useEffect(() => {
     if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) return;
     loadGoogleMaps().then(() => {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
       setMapsReady(true);
     }).catch(err => {
       console.error('Failed to load Google Maps:', err);
     });
   }, []);
 
-  // Search places using the SDK
+  // Search places using the new AutocompleteSuggestion API
   useEffect(() => {
-    if (!searchQuery || searchQuery.length < 2 || !mapsReady || !autocompleteService.current) {
+    if (!searchQuery || searchQuery.length < 2 || !mapsReady) {
       setSuggestions([])
       return
     }
 
     setIsLoadingPlaces(true)
+    let cancelled = false
 
-    const timeoutId = setTimeout(() => {
-      autocompleteService.current.getPlacePredictions(
-        {
+    const timeoutId = setTimeout(async () => {
+      try {
+        const { suggestions: results } = await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
           input: searchQuery,
-          componentRestrictions: { country: 'il' },
+          includedRegionCodes: ['il'],
           language: 'he',
-        },
-        (predictions, status) => {
-          setIsLoadingPlaces(false)
-          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-            setSuggestions(predictions)
-            setShowSuggestions(true)
-          } else {
-            setSuggestions([])
-          }
+        })
+
+        if (!cancelled && results && results.length > 0) {
+          setSuggestions(results)
+          setShowSuggestions(true)
+        } else if (!cancelled) {
+          setSuggestions([])
         }
-      )
+      } catch (err) {
+        console.error('Places API error:', err)
+        if (!cancelled) setSuggestions([])
+      } finally {
+        if (!cancelled) setIsLoadingPlaces(false)
+      }
     }, 300)
 
-    return () => clearTimeout(timeoutId)
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
   }, [searchQuery, mapsReady])
 
   // Close suggestions on outside click
@@ -113,11 +122,11 @@ export default function SearchBar() {
     }
   }
 
-  const handleSelectPlace = (description) => {
-    setSearchQuery(description)
+  const handleSelectPlace = (text) => {
+    setSearchQuery(text)
     setShowSuggestions(false)
     setSuggestions([])
-    navigate(`/search?q=${encodeURIComponent(description)}`)
+    navigate(`/search?q=${encodeURIComponent(text)}`)
   }
 
   const handleSuggestionClick = (suggestion) => {
@@ -154,18 +163,22 @@ export default function SearchBar() {
         {/* Google Places Suggestions Dropdown */}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
-            {suggestions.map((suggestion) => (
-              <button
-                key={suggestion.place_id}
-                type="button"
-                onClick={() => handleSelectPlace(suggestion.description)}
-                className="w-full px-6 py-4 text-right hover:bg-primary-50 transition-colors flex items-center gap-3 border-b border-gray-100 last:border-b-0"
-                dir="rtl"
-              >
-                <span className="text-gray-400 flex-shrink-0">📍</span>
-                <span className="text-gray-800 font-medium">{suggestion.description}</span>
-              </button>
-            ))}
+            {suggestions.map((suggestion, index) => {
+              const prediction = suggestion.placePrediction;
+              const text = prediction?.text?.text || '';
+              return (
+                <button
+                  key={prediction?.placeId || index}
+                  type="button"
+                  onClick={() => handleSelectPlace(text)}
+                  className="w-full px-6 py-4 text-right hover:bg-primary-50 transition-colors flex items-center gap-3 border-b border-gray-100 last:border-b-0"
+                  dir="rtl"
+                >
+                  <span className="text-gray-400 flex-shrink-0">📍</span>
+                  <span className="text-gray-800 font-medium">{text}</span>
+                </button>
+              );
+            })}
             <div className="px-4 py-2 bg-gray-50 text-xs text-gray-400 text-center">
               Powered by Google
             </div>
