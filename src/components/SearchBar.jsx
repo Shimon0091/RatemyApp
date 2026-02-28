@@ -122,11 +122,21 @@ export default function SearchBar() {
     }
   }
 
+  const cleanSearchQuery = (text) => {
+    // Remove "ישראל" / "Israel" and clean up commas for better database matching
+    return text
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p && p !== 'ישראל' && p !== 'Israel')
+      .join(', ')
+  }
+
   const handleSelectPlace = (text) => {
-    setSearchQuery(text)
+    const cleaned = cleanSearchQuery(text)
+    setSearchQuery(cleaned)
     setShowSuggestions(false)
     setSuggestions([])
-    navigate(`/search?q=${encodeURIComponent(text)}`)
+    navigate(`/search?q=${encodeURIComponent(cleaned)}`)
   }
 
   const handleSuggestionClick = (suggestion) => {

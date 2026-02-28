@@ -58,7 +58,12 @@ export default function SearchResultsPage() {
     setError('')
 
     try {
-      const { data, error: searchError, count, totalPages: pages } = await searchProperties(query, {
+      // Add timeout so search never hangs forever
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 10000)
+      )
+
+      const searchPromise = searchProperties(query, {
         minRating,
         neighborhood,
         minReviews,
@@ -68,6 +73,11 @@ export default function SearchResultsPage() {
         pageSize: 12
       })
 
+      const { data, error: searchError, count, totalPages: pages } = await Promise.race([
+        searchPromise,
+        timeoutPromise
+      ])
+
       if (searchError) throw searchError
 
       setProperties(data || [])
@@ -75,7 +85,7 @@ export default function SearchResultsPage() {
       setTotalPages(pages || 0)
     } catch (err) {
       logger.error('Error searching:', err)
-      setError(t('error.generic'))
+      setError(err.message === 'timeout' ? 'החיפוש לקח יותר מדי זמן. נסה שוב.' : t('error.generic'))
     } finally {
       setLoading(false)
     }
