@@ -68,17 +68,10 @@ export async function searchProperties(query, options = {}) {
 
   // Search by street or city
   if (query) {
-    // Clean query: remove "ישראל", split by commas, search each part
-    const parts = query.split(',').map(p => p.trim()).filter(Boolean)
-    const searchParts = parts.filter(p => p !== 'ישראל' && p !== 'Israel')
-
-    if (searchParts.length === 1) {
-      // Single search term — simple search
-      dbQuery = dbQuery.or(`street.ilike.%${searchParts[0]}%,city.ilike.%${searchParts[0]}%`)
-    } else if (searchParts.length > 1) {
-      // Multiple parts (e.g. "ביאליק 78" and "רמת גן")
-      // Search first part against street, second part against city
-      dbQuery = dbQuery.or(`street.ilike.%${searchParts[0]}%,city.ilike.%${searchParts[0]}%,city.ilike.%${searchParts[1]}%`)
+    // Use the first part (street name) for searching — simplest and most reliable
+    const firstPart = query.split(',')[0].trim()
+    if (firstPart) {
+      dbQuery = dbQuery.or(`street.ilike.%${firstPart}%,city.ilike.%${firstPart}%`)
     }
   }
 

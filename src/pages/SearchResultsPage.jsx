@@ -58,12 +58,7 @@ export default function SearchResultsPage() {
     setError('')
 
     try {
-      // Add timeout so search never hangs forever
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 10000)
-      )
-
-      const searchPromise = searchProperties(query, {
+      const { data, error: searchError, count, totalPages: pages } = await searchProperties(query, {
         minRating,
         neighborhood,
         minReviews,
@@ -73,19 +68,17 @@ export default function SearchResultsPage() {
         pageSize: 12
       })
 
-      const { data, error: searchError, count, totalPages: pages } = await Promise.race([
-        searchPromise,
-        timeoutPromise
-      ])
-
-      if (searchError) throw searchError
+      if (searchError) {
+        logger.error('Search error:', searchError)
+        // Don't show error for empty results — just show 0
+      }
 
       setProperties(data || [])
-      setTotalCount(count || 0)
+      setTotalCount(count ?? 0)
       setTotalPages(pages || 0)
     } catch (err) {
       logger.error('Error searching:', err)
-      setError(err.message === 'timeout' ? 'החיפוש לקח יותר מדי זמן. נסה שוב.' : t('error.generic'))
+      setError(t('error.generic'))
     } finally {
       setLoading(false)
     }
@@ -356,18 +349,20 @@ export default function SearchResultsPage() {
             ) : query ? (
               <Card className="shadow-soft">
                 <CardBody className="text-center py-16">
-                  <div className="bg-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Icon.Search className="w-12 h-12 text-gray-400" />
+                  <div className="bg-primary-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Icon.Edit className="w-12 h-12 text-primary-600" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    {t('search.noResults')}
+                    עדיין אין ביקורות על כתובת זו
                   </h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    {t('search.noResultsFor')} "{query}". {t('search.tryDifferent')}
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto text-lg">
+                    לא נמצאו ביקורות עבור "{query}".
+                    <br />
+                    גרת בכתובת הזו? היה הראשון לשתף את החוויה שלך!
                   </p>
                   <Button onClick={() => navigate('/write-review')} size="lg">
-                    <Icon.Dragon />
-                    {t('search.writeFirst')}
+                    <Icon.Edit />
+                    כתוב ביקורת ראשונה
                   </Button>
                 </CardBody>
               </Card>
