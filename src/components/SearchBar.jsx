@@ -1,59 +1,97 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
+
+// Load Google Maps script once
+let googleMapsLoaded = false;
+let googleMapsLoading = false;
+const loadGoogleMaps = () => {
+  return new Promise((resolve, reject) => {
+    if (window.google?.maps?.places) {
+      googleMapsLoaded = true;
+      resolve();
+      return;
+    }
+    if (googleMapsLoading) {
+      // Wait for existing load
+      const check = setInterval(() => {
+        if (window.google?.maps?.places) {
+          clearInterval(check);
+          googleMapsLoaded = true;
+          resolve();
+        }
+      }, 100);
+      return;
+    }
+    googleMapsLoading = true;
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=he`;
+    script.async = true;
+    script.onload = () => {
+      googleMapsLoaded = true;
+      googleMapsLoading = false;
+      resolve();
+    };
+    script.onerror = (err) => {
+      googleMapsLoading = false;
+      reject(err);
+    };
+    document.head.appendChild(script);
+  });
+};
 
 export default function SearchBar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false)
+  const [mapsReady, setMapsReady] = useState(false)
   const autocompleteRef = useRef(null)
+  const autocompleteService = useRef(null)
   const navigate = useNavigate()
 
-  // Google Places Autocomplete
+  // Load Google Maps SDK
   useEffect(() => {
-    const searchPlaces = async () => {
-      if (!searchQuery || searchQuery.length < 2) {
-        setSuggestions([])
-        return
-      }
-      if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) {
-        setSuggestions([])
-        return
-      }
+    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) return;
+    loadGoogleMaps().then(() => {
+      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      setMapsReady(true);
+    }).catch(err => {
+      console.error('Failed to load Google Maps:', err);
+    });
+  }, []);
 
-      setIsLoadingPlaces(true)
-
-      try {
-        const query = `${searchQuery}, ישראל`
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&components=country:il&language=he`
-        )
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch places')
-        }
-
-        const data = await response.json()
-
-        if (data.status === 'OK' && data.predictions) {
-          setSuggestions(data.predictions)
-          setShowSuggestions(true)
-        } else {
-          setSuggestions([])
-        }
-      } catch (err) {
-        console.error('Places API error:', err)
-        setSuggestions([])
-      } finally {
-        setIsLoadingPlaces(false)
-      }
+  // Search places using the SDK
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2 || !mapsReady || !autocompleteService.current) {
+      setSuggestions([])
+      return
     }
 
-    const timeoutId = setTimeout(searchPlaces, 300)
+    setIsLoadingPlaces(true)
+
+    const timeoutId = setTimeout(() => {
+      autocompleteService.current.getPlacePredictions(
+        {
+          input: searchQuery,
+          componentRestrictions: { country: 'il' },
+          language: 'he',
+        },
+        (predictions, status) => {
+          setIsLoadingPlaces(false)
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setSuggestions(predictions)
+            setShowSuggestions(true)
+          } else {
+            setSuggestions([])
+          }
+        }
+      )
+    }, 300)
+
     return () => clearTimeout(timeoutId)
-  }, [searchQuery])
+  }, [searchQuery, mapsReady])
 
   // Close suggestions on outside click
   useEffect(() => {
@@ -135,7 +173,7 @@ export default function SearchBar() {
         )}
 
         {/* Loading indicator */}
-        {isLoadingPlaces && (
+        {isLoadingPlaces && searchQuery.length >= 2 && (
           <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl p-4 text-center text-gray-500" dir="rtl">
             מחפש כתובות...
           </div>

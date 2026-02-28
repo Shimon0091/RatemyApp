@@ -54,51 +54,85 @@ export default function WriteReviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Google Places Autocomplete
+  // Load Google Maps SDK
+  const autocompleteServiceRef = useRef(null);
+  const placesServiceRef = useRef(null);
+  const placesContainerRef = useRef(null);
+
   useEffect(() => {
-    const searchPlaces = async () => {
-      if (!street || street.length < 3) {
-        setSuggestions([]);
+    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) return;
+
+    const loadGoogleMaps = () => {
+      if (window.google?.maps?.places) {
+        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        // PlacesService needs a DOM element or map
+        const div = document.createElement('div');
+        placesServiceRef.current = new window.google.maps.places.PlacesService(div);
         return;
       }
-      if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) {
-        setSuggestions([]);
+      // Check if script is already loading
+      if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+        const check = setInterval(() => {
+          if (window.google?.maps?.places) {
+            clearInterval(check);
+            autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+            const div = document.createElement('div');
+            placesServiceRef.current = new window.google.maps.places.PlacesService(div);
+          }
+        }, 100);
         return;
       }
-
-      setIsLoadingPlaces(true);
-
-      try {
-        const query = `${street}, ישראל`;
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&components=country:il&language=he`
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch places');
-        }
-
-        const data = await response.json();
-
-        if (data.status === 'OK' && data.predictions) {
-          setSuggestions(data.predictions);
-        } else {
-          setSuggestions([]);
-        }
-      } catch (err) {
-        logger.error('Places API error:', err);
-        setSuggestions([]);
-      } finally {
-        setIsLoadingPlaces(false);
-      }
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=he`;
+      script.async = true;
+      script.onload = () => {
+        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        const div = document.createElement('div');
+        placesServiceRef.current = new window.google.maps.places.PlacesService(div);
+      };
+      document.head.appendChild(script);
     };
 
-    const timeoutId = setTimeout(searchPlaces, 300);
+    loadGoogleMaps();
+  }, []);
+
+  // Google Places Autocomplete
+  useEffect(() => {
+    if (!street || street.length < 3 || !autocompleteServiceRef.current) {
+      setSuggestions([]);
+      return;
+    }
+    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsLoadingPlaces(true);
+
+    const timeoutId = setTimeout(() => {
+      autocompleteServiceRef.current.getPlacePredictions(
+        {
+          input: street,
+          componentRestrictions: { country: 'il' },
+          language: 'he',
+        },
+        (predictions, status) => {
+          setIsLoadingPlaces(false);
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            setSuggestions(predictions);
+            setShowSuggestions(true);
+          } else {
+            setSuggestions([]);
+          }
+        }
+      );
+    }, 300);
+
     return () => clearTimeout(timeoutId);
   }, [street]);
 
   const handleSelectPlace = async (placeId, description) => {
-    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) {
+    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX') || !placesServiceRef.current) {
       const parts = description.split(',');
       if (parts.length > 0) setStreet(parts[0].trim());
       if (parts.length > 1) setCity(parts[1].trim());
@@ -107,49 +141,49 @@ export default function WriteReviewPage() {
       return;
     }
     try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_PLACES_API_KEY}&language=he`
-      );
+      placesServiceRef.current.getDetails(
+        { placeId, fields: ['address_components'] },
+        (place, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+            const addressComponents = place.address_components || [];
 
-      const data = await response.json();
+            let streetName = '';
+            let streetNumber = '';
+            let cityName = '';
 
-      if (data.status === 'OK' && data.result) {
-        const place = data.result;
-        const addressComponents = place.address_components || [];
+            for (const component of addressComponents) {
+              if (component.types.includes('route')) {
+                streetName = component.long_name;
+              }
+              if (component.types.includes('street_number')) {
+                streetNumber = component.long_name;
+              }
+              if (component.types.includes('locality')) {
+                cityName = component.long_name;
+              }
+            }
 
-        let streetName = '';
-        let streetNumber = '';
-        let cityName = '';
-
-        for (const component of addressComponents) {
-          if (component.types.includes('route')) {
-            streetName = component.long_name;
+            setStreet(streetName);
+            setBuildingNumber(streetNumber);
+            setCity(cityName);
+          } else {
+            const parts = description.split(',');
+            if (parts.length > 0) setStreet(parts[0].trim());
+            if (parts.length > 1) setCity(parts[1].trim());
           }
-          if (component.types.includes('street_number')) {
-            streetNumber = component.long_name;
-          }
-          if (component.types.includes('locality')) {
-            cityName = component.long_name;
-          }
+
+          setSuggestions([]);
+          setShowSuggestions(false);
         }
-
-        setStreet(streetName);
-        setBuildingNumber(streetNumber);
-        setCity(cityName);
-      } else {
-        const parts = description.split(',');
-        if (parts.length > 0) setStreet(parts[0].trim());
-        if (parts.length > 1) setCity(parts[1].trim());
-      }
+      );
     } catch (err) {
       logger.error('Error getting place details:', err);
       const parts = description.split(',');
       if (parts.length > 0) setStreet(parts[0].trim());
       if (parts.length > 1) setCity(parts[1].trim());
+      setSuggestions([]);
+      setShowSuggestions(false);
     }
-
-    setSuggestions([]);
-    setShowSuggestions(false);
   };
 
   useEffect(() => {
