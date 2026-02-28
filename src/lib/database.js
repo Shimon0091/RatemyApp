@@ -68,19 +68,25 @@ export async function searchProperties(query, options = {}) {
 
   // Search by street or city — split query into parts for better matching
   if (query) {
-    // Split by commas and spaces to handle Google Places format like "ביאליק 56, רמת גן, ישראל"
+    // Split by commas to handle Google Places format like "ביאליק 56, רמת גן, ישראל"
     const parts = query.split(',').map(p => p.trim()).filter(Boolean)
-    const orConditions = []
-    for (const part of parts) {
-      // Skip generic terms like "ישראל"
-      if (part === 'ישראל' || part === 'Israel') continue
-      orConditions.push(`street.ilike.%${part}%`)
-      orConditions.push(`city.ilike.%${part}%`)
+    // Filter out generic terms and build clean search parts
+    const searchParts = parts.filter(p => p !== 'ישראל' && p !== 'Israel')
+
+    if (searchParts.length > 0) {
+      // Search each part individually against street and city
+      // Use the first meaningful part (usually the street) as primary search
+      const primaryPart = searchParts[0]
+      const orConditions = [`street.ilike.%${primaryPart}%`, `city.ilike.%${primaryPart}%`]
+
+      // Add additional parts (usually city name)
+      for (let i = 1; i < searchParts.length; i++) {
+        orConditions.push(`city.ilike.%${searchParts[i]}%`)
+        orConditions.push(`street.ilike.%${searchParts[i]}%`)
+      }
+
+      dbQuery = dbQuery.or(orConditions.join(','))
     }
-    // Also search the full query as-is
-    orConditions.push(`street.ilike.%${query}%`)
-    orConditions.push(`city.ilike.%${query}%`)
-    dbQuery = dbQuery.or(orConditions.join(','))
   }
 
   // Filter by minimum rating

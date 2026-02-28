@@ -52,10 +52,14 @@ export default function Header() {
   }, [user])
 
   const handleSignOut = async () => {
-    await signOut()
-    navigate('/')
+    try {
+      await signOut()
+    } catch (err) {
+      console.error('Sign out error:', err)
+    }
     setShowUserMenu(false)
     setShowMobileMenu(false)
+    navigate('/')
   }
 
   return (
