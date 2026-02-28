@@ -169,9 +169,13 @@ export function AuthProvider({ children }) {
     signInWithApple: authHelpers.signInWithApple,
     signInWithEmail: authHelpers.signInWithEmail,
     signUpWithEmail: authHelpers.signUpWithEmail,
-    signOut: async () => {
-      await authHelpers.signOut()
+    signOut: () => {
+      // Clear user state immediately so UI updates right away
       setUser(null)
+      // Fire-and-forget the API call — don't wait for it
+      authHelpers.signOut().catch(err => {
+        console.error('Sign out API error:', err)
+      })
     }
   }
 
