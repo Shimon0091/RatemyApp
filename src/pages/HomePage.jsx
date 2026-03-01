@@ -186,27 +186,23 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* Stats */}
-        <div className="mb-24 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          <Card className="text-center p-6 hover:shadow-medium transition-shadow">
-            <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
-              {loading ? '...' : stats.totalReviews.toLocaleString('he-IL')}
-            </div>
-            <div className="text-gray-600 font-medium text-lg">{t('stats.reviews')}</div>
-          </Card>
-          <Card className="text-center p-6 hover:shadow-medium transition-shadow">
-            <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
-              {loading ? '...' : stats.totalProperties.toLocaleString('he-IL')}
-            </div>
-            <div className="text-gray-600 font-medium text-lg">{t('stats.properties')}</div>
-          </Card>
-          <Card className="text-center p-6 hover:shadow-medium transition-shadow">
-            <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
-              {stats.neighborhoods}
-            </div>
-            <div className="text-gray-600 font-medium text-lg">שכונות בכיסוי</div>
-          </Card>
-        </div>
+        {/* Stats — only show when there's real data */}
+        {!loading && (stats.totalReviews > 0 || stats.totalProperties > 0) && (
+          <div className="mb-24 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            <Card className="text-center p-6 hover:shadow-medium transition-shadow">
+              <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
+                {stats.totalReviews.toLocaleString('he-IL')}
+              </div>
+              <div className="text-gray-600 font-medium text-lg">{t('stats.reviews')}</div>
+            </Card>
+            <Card className="text-center p-6 hover:shadow-medium transition-shadow">
+              <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
+                {stats.totalProperties.toLocaleString('he-IL')}
+              </div>
+              <div className="text-gray-600 font-medium text-lg">{t('stats.properties')}</div>
+            </Card>
+          </div>
+        )}
 
         {/* Top Rated Properties */}
         {topProperties.length > 0 && (
@@ -332,7 +328,7 @@ export default function HomePage() {
               למה דירגון?
             </h3>
             <p className="text-xl text-gray-600 font-medium">
-              הפלטפורמה המהימנה ביותר לדירוג דירות בישראל
+              פלטפורמה לדירוג דירות שנבנית על ידי שוכרים, בשביל שוכרים
             </p>
           </div>
 
@@ -431,7 +427,7 @@ export default function HomePage() {
             </h3>
           </div>
           <p className="text-xl text-blue-100 mb-8 font-medium">
-            הצטרף לאלפי שוכרים שכבר משתמשים בדירגון למצוא דירות טובות יותר
+            הצטרף לקהילת השוכרים שבונים יחד מאגר ביקורות אמיתי על דירות בישראל
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Link
@@ -463,7 +459,7 @@ export default function HomePage() {
                 <span className="text-3xl font-extrabold">{t('app.name')}</span>
               </div>
               <p className="text-gray-400 mb-6 text-lg leading-relaxed">
-                {t('app.description')} - הפלטפורמה המובילה לדירוג דירות להשכרה בתל אביב.
+                {t('app.description')} - ביקורות אמיתיות על דירות להשכרה מהשוכרים עצמם.
               </p>
             </div>
 
@@ -498,14 +494,14 @@ export default function HomePage() {
               <ul className="space-y-2 text-gray-400">
                 <li className="flex items-center gap-2">
                   <Icon.Message className="w-4 h-4" />
-                  support@diragon.com
+                  shimon@frame-5.com
                 </li>
               </ul>
             </div>
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 {t('app.name')}. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} {t('app.name')}. כל הזכויות שמורות.</p>
           </div>
         </div>
       </footer>

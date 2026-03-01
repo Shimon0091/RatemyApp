@@ -17,6 +17,9 @@ const MyReviewsPage = lazy(() => import('./pages/MyReviewsPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const TermsPage = lazy(() => import('./pages/TermsPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
+const FaqPage = lazy(() => import('./pages/FaqPage'))
 
 // Loading fallback component
 function PageLoader() {
@@ -47,6 +50,9 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/faq" element={<FaqPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

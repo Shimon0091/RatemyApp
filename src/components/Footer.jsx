@@ -80,16 +80,16 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                <Link to="/contact" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
                   <Icon.MessageCircle className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
                   {t('footer.contact')}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                <Link to="/faq" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
                   <Icon.Alert className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
                   {t('footer.faq')}
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
