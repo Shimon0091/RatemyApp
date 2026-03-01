@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
+import ErrorBoundary from './components/ErrorBoundary'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -13,6 +14,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const MyReviewsPage = lazy(() => import('./pages/MyReviewsPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 // Loading fallback component
 function PageLoader() {
@@ -28,21 +30,24 @@ function PageLoader() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/property/:id" element={<PropertyPage />} />
-          <Route path="/search" element={<SearchResultsPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/write-review" element={<WriteReviewPage />} />
-          <Route path="/edit-review/:id" element={<EditReviewPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/my-reviews" element={<MyReviewsPage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-        </Routes>
-      </Suspense>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/property/:id" element={<PropertyPage />} />
+            <Route path="/search" element={<SearchResultsPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/write-review" element={<WriteReviewPage />} />
+            <Route path="/edit-review/:id" element={<EditReviewPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/my-reviews" element={<MyReviewsPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 
