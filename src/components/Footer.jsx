@@ -68,16 +68,16 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                <Link to="/terms" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
                   <Icon.FileCheck className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
                   {t('footer.terms')}
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
                   <Icon.Lock className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
                   {t('footer.privacy')}
-                </a>
+                </Link>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
