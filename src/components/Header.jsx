@@ -86,9 +86,9 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <button className="text-gray-700 hover:text-primary-500 transition-colors font-medium">
+            <Link to="/about" className="text-gray-700 hover:text-primary-500 transition-colors font-medium">
               {t('nav.about')}
-            </button>
+            </Link>
 
             {user ? (
               <>
@@ -189,9 +189,9 @@ export default function Header() {
         {showMobileMenu && (
           <div className="md:hidden mt-4 pt-4 border-t border-gray-200 animate-slide-down">
             <nav className="flex flex-col gap-3">
-              <button className="text-right px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium">
+              <Link to="/about" className="text-right px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium" onClick={() => setShowMobileMenu(false)}>
                 {t('nav.about')}
-              </button>
+              </Link>
 
               {user ? (
                 <>

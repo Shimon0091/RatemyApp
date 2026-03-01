@@ -7,6 +7,7 @@ import { getTopRatedProperties } from '../lib/database'
 import { supabase } from '../lib/supabase'
 import RatingStars from '../components/RatingStars'
 import { logger } from '../utils/logger'
+import Footer from '../components/Footer'
 import Icon from '../components/icons'
 import { Badge } from '../components/ui/Badge'
 import { Card } from '../components/ui/Card'
@@ -448,63 +449,7 @@ export default function HomePage() {
         </Card>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-32 py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            {/* Company Info */}
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-4 mb-6">
-                <Icon.Dragon className="w-12 h-12" />
-                <span className="text-3xl font-extrabold">{t('app.name')}</span>
-              </div>
-              <p className="text-gray-400 mb-6 text-lg leading-relaxed">
-                {t('app.description')} - ביקורות אמיתיות על דירות להשכרה מהשוכרים עצמם.
-              </p>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-xl font-bold mb-4">קישורים</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link to="/search" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
-                    <Icon.Search className="w-4 h-4" />
-                    חיפוש דירות
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/write-review" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
-                    <Icon.Edit className="w-4 h-4" />
-                    כתוב ביקורת
-                  </Link>
-                </li>
-                <li>
-                  <a href="#about" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
-                    <Icon.FileText className="w-4 h-4" />
-                    אודות
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Contact */}
-            <div>
-              <h4 className="text-xl font-bold mb-4">צור קשר</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li className="flex items-center gap-2">
-                  <Icon.Message className="w-4 h-4" />
-                  shimon@frame-5.com
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} {t('app.name')}. כל הזכויות שמורות.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
