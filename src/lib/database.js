@@ -66,11 +66,16 @@ export async function searchProperties(query, options = {}) {
     .from('properties')
     .select('*', { count: 'exact' })
 
-  // Search by street or city
+  // Search by street or city (and optionally building number)
   if (query) {
-    // Use the first part (street name) for searching — simplest and most reliable
     const firstPart = query.split(',')[0].trim()
-    if (firstPart) {
+    // Check if query contains a street name followed by a building number (e.g. "שינקין 22")
+    const match = firstPart.match(/^(.+?)\s+(\d+)$/)
+    if (match) {
+      const [, street, buildingNum] = match
+      dbQuery = dbQuery.or(`street.ilike.%${street}%,city.ilike.%${street}%`)
+      dbQuery = dbQuery.ilike('building_number', `%${buildingNum}%`)
+    } else if (firstPart) {
       dbQuery = dbQuery.or(`street.ilike.%${firstPart}%,city.ilike.%${firstPart}%`)
     }
   }

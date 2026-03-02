@@ -446,6 +446,13 @@ export default function HomePage() {
               כתוב ביקורת
             </Link>
           </div>
+          <p className="text-blue-200 text-sm mt-6 flex items-center justify-center gap-3 flex-wrap">
+            <span className="flex items-center gap-1"><Icon.Lock className="w-4 h-4" /> אנונימי לחלוטין</span>
+            <span>•</span>
+            <span className="flex items-center gap-1"><Icon.Heart className="w-4 h-4" /> חינם לגמרי</span>
+            <span>•</span>
+            <span className="flex items-center gap-1"><Icon.Check className="w-4 h-4" /> ללא קשר לבעלי דירות</span>
+          </p>
         </Card>
       </main>
 
