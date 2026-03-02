@@ -50,6 +50,11 @@ export async function getProperty(propertyId) {
   return { data, error }
 }
 
+// Normalize Hebrew geresh/apostrophe variants to % wildcard for flexible ilike matching
+function normalizeSearchText(text) {
+  return text.replace(/[\u05F3\u05F4'`\u0060]/g, '%')
+}
+
 // Search properties with filters and pagination
 export async function searchProperties(query, options = {}) {
   const {
@@ -73,10 +78,12 @@ export async function searchProperties(query, options = {}) {
     const match = firstPart.match(/^(.+?)\s+(\d+)$/)
     if (match) {
       const [, street, buildingNum] = match
-      dbQuery = dbQuery.or(`street.ilike.%${street}%,city.ilike.%${street}%`)
+      const normalizedStreet = normalizeSearchText(street)
+      dbQuery = dbQuery.or(`street.ilike.%${normalizedStreet}%,city.ilike.%${normalizedStreet}%`)
       dbQuery = dbQuery.ilike('building_number', `%${buildingNum}%`)
     } else if (firstPart) {
-      dbQuery = dbQuery.or(`street.ilike.%${firstPart}%,city.ilike.%${firstPart}%`)
+      const normalized = normalizeSearchText(firstPart)
+      dbQuery = dbQuery.or(`street.ilike.%${normalized}%,city.ilike.%${normalized}%`)
     }
   }
 

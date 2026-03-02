@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState('login') // 'login' or 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [agreeTerms, setAgreeTerms] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -120,6 +122,14 @@ export default function LoginPage() {
           }, 500)
         }
       } else {
+        // Signup validation
+        if (password !== confirmPassword) {
+          throw new Error('הסיסמאות לא תואמות')
+        }
+        if (!agreeTerms) {
+          throw new Error('יש לאשר את תנאי השימוש ומדיניות הפרטיות')
+        }
+
         logger.log('🔵 Attempting email signup:', email)
         const { error } = await signUpWithEmail(email, password)
 
@@ -254,6 +264,34 @@ export default function LoginPage() {
                 )}
               </div>
 
+              {mode === 'signup' && (
+                <Input
+                  label="אימות סיסמה"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="••••••••"
+                  dir="ltr"
+                />
+              )}
+
+              {mode === 'signup' && (
+                <label className="flex items-start gap-2 cursor-pointer" dir="rtl">
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="mt-1 w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                    required
+                  />
+                  <span className="text-sm text-gray-600">
+                    אני מסכים/ה ל<a href="/terms" target="_blank" className="text-primary-600 hover:underline font-medium">תנאי השימוש</a> ול<a href="/privacy" target="_blank" className="text-primary-600 hover:underline font-medium">מדיניות הפרטיות</a>
+                  </span>
+                </label>
+              )}
+
               <Button
                 type="submit"
                 disabled={loading}
@@ -300,6 +338,8 @@ export default function LoginPage() {
                   setSuccess('')
                   setEmail('')
                   setPassword('')
+                  setConfirmPassword('')
+                  setAgreeTerms(false)
                 }}
                 className="text-primary-600 hover:text-primary-700 hover:underline font-semibold cursor-pointer"
               >
@@ -311,9 +351,9 @@ export default function LoginPage() {
           {/* Info */}
           <p className="text-center text-sm text-gray-500 mt-6">
             בהרשמה, אתה מסכים ל
-            <a href="#" className="text-primary-600 hover:text-primary-700 hover:underline mx-1 font-medium">תנאי השימוש</a>
+            <a href="/terms" className="text-primary-600 hover:text-primary-700 hover:underline mx-1 font-medium">תנאי השימוש</a>
             ול
-            <a href="#" className="text-primary-600 hover:text-primary-700 hover:underline mx-1 font-medium">מדיניות הפרטיות</a>
+            <a href="/privacy" className="text-primary-600 hover:text-primary-700 hover:underline mx-1 font-medium">מדיניות הפרטיות</a>
           </p>
 
           {/* Additional Info Cards */}
