@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Header from '../components/Header'
@@ -6,12 +6,21 @@ import Footer from '../components/Footer'
 import RatingStars from '../components/RatingStars'
 import Pagination from '../components/Pagination'
 import { searchProperties, getNeighborhoods } from '../lib/database'
-import { logger } from '../utils/logger'
 import Icon from '../components/icons'
 import { Button } from '../components/ui/Button'
 import { Card, CardBody } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+
+// Timeout wrapper for async operations
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('TIMEOUT')), ms)
+    )
+  ])
+}
 
 export default function SearchResultsPage() {
   const { t } = useTranslation()
@@ -36,54 +45,83 @@ export default function SearchResultsPage() {
 
   // Load neighborhoods on mount
   useEffect(() => {
-    loadNeighborhoods()
+    let cancelled = false
+    getNeighborhoods()
+      .then(({ data }) => {
+        if (!cancelled) setNeighborhoods(data || [])
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
   }, [])
 
   // Load search results when query or filters change
   useEffect(() => {
-    loadSearchResults()
-  }, [query, minRating, neighborhood, minReviews, sortBy, currentPage])
+    let cancelled = false
 
-  const loadNeighborhoods = async () => {
-    try {
-      const { data } = await getNeighborhoods()
-      setNeighborhoods(data || [])
-    } catch (err) {
-      logger.error('Error loading neighborhoods:', err)
-    }
-  }
+    const doSearch = async () => {
+      setLoading(true)
+      setError('')
 
-  const loadSearchResults = async () => {
-    setLoading(true)
-    setError('')
+      try {
+        const result = await withTimeout(
+          searchProperties(query || '', {
+            minRating,
+            neighborhood,
+            minReviews,
+            sortBy,
+            ascending: false,
+            page: currentPage,
+            pageSize: 12
+          }),
+          15000
+        )
 
-    try {
-      // When no query, pass empty string to load all properties (browse mode)
-      const { data, error: searchError, count, totalPages: pages } = await searchProperties(query || '', {
-        minRating,
-        neighborhood,
-        minReviews,
-        sortBy,
-        ascending: false,
-        page: currentPage,
-        pageSize: 12
-      })
+        if (cancelled) return
 
-      if (searchError) {
-        logger.error('Search error:', searchError)
-        // Don't show error for empty results — just show 0
+        if (result.error) {
+          console.error('Search error:', result.error)
+        }
+
+        setProperties(result.data || [])
+        setTotalCount(result.count ?? 0)
+        setTotalPages(result.totalPages || 0)
+      } catch (err) {
+        if (cancelled) return
+        console.error('Search failed:', err)
+        setError(
+          err.message === 'TIMEOUT'
+            ? 'החיפוש לוקח יותר מדי זמן. נסו שוב.'
+            : t('error.generic')
+        )
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
-
-      setProperties(data || [])
-      setTotalCount(count ?? 0)
-      setTotalPages(pages || 0)
-    } catch (err) {
-      logger.error('Error searching:', err)
-      setError(t('error.generic'))
-    } finally {
-      setLoading(false)
     }
-  }
+
+    doSearch()
+    return () => { cancelled = true }
+  }, [query, minRating, neighborhood, minReviews, sortBy, currentPage, t])
+
+  const retrySearch = useCallback(() => {
+    setError('')
+    setLoading(true)
+    withTimeout(
+      searchProperties(query || '', {
+        minRating, neighborhood, minReviews, sortBy,
+        ascending: false, page: currentPage, pageSize: 12
+      }),
+      15000
+    )
+      .then(result => {
+        setProperties(result.data || [])
+        setTotalCount(result.count ?? 0)
+        setTotalPages(result.totalPages || 0)
+      })
+      .catch(() => setError(t('error.generic')))
+      .finally(() => setLoading(false))
+  }, [query, minRating, neighborhood, minReviews, sortBy, currentPage, t])
 
   const handlePageChange = (page) => {
     setCurrentPage(page)
@@ -262,7 +300,10 @@ export default function SearchResultsPage() {
           <Card className="shadow-soft bg-red-50 border-2 border-red-200 mb-8">
             <CardBody className="p-6 text-center">
               <Icon.Alert className="w-12 h-12 text-red-600 mx-auto mb-3" />
-              <div className="text-red-700 font-medium">{error}</div>
+              <div className="text-red-700 font-medium mb-4">{error}</div>
+              <Button variant="outline" onClick={retrySearch}>
+                נסו שוב
+              </Button>
             </CardBody>
           </Card>
         )}

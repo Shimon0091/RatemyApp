@@ -67,58 +67,63 @@ export async function searchProperties(query, options = {}) {
     pageSize = 20
   } = options
 
-  let dbQuery = supabase
-    .from('properties')
-    .select('*', { count: 'exact' })
+  try {
+    let dbQuery = supabase
+      .from('properties')
+      .select('*', { count: 'exact' })
 
-  // Search by street or city (and optionally building number)
-  if (query) {
-    const firstPart = query.split(',')[0].trim()
-    // Check if query contains a street name followed by a building number (e.g. "שינקין 22")
-    const match = firstPart.match(/^(.+?)\s+(\d+)$/)
-    if (match) {
-      const [, street, buildingNum] = match
-      const normalizedStreet = normalizeSearchText(street)
-      dbQuery = dbQuery.or(`street.ilike.%${normalizedStreet}%,city.ilike.%${normalizedStreet}%`)
-      dbQuery = dbQuery.ilike('building_number', `%${buildingNum}%`)
-    } else if (firstPart) {
-      const normalized = normalizeSearchText(firstPart)
-      dbQuery = dbQuery.or(`street.ilike.%${normalized}%,city.ilike.%${normalized}%`)
+    // Search by street or city (and optionally building number)
+    if (query) {
+      const firstPart = query.split(',')[0].trim()
+      // Check if query contains a street name followed by a building number (e.g. "שינקין 22")
+      const match = firstPart.match(/^(.+?)\s+(\d+)$/)
+      if (match) {
+        const [, street, buildingNum] = match
+        const normalizedStreet = normalizeSearchText(street)
+        dbQuery = dbQuery.or(`street.ilike.%${normalizedStreet}%,city.ilike.%${normalizedStreet}%`)
+        dbQuery = dbQuery.ilike('building_number', `%${buildingNum}%`)
+      } else if (firstPart) {
+        const normalized = normalizeSearchText(firstPart)
+        dbQuery = dbQuery.or(`street.ilike.%${normalized}%,city.ilike.%${normalized}%`)
+      }
     }
-  }
 
-  // Filter by minimum rating
-  if (minRating) {
-    dbQuery = dbQuery.gte('overall_rating', minRating)
-  }
+    // Filter by minimum rating
+    if (minRating) {
+      dbQuery = dbQuery.gte('overall_rating', minRating)
+    }
 
-  // Filter by neighborhood
-  if (neighborhood) {
-    dbQuery = dbQuery.eq('neighborhood', neighborhood)
-  }
+    // Filter by neighborhood
+    if (neighborhood) {
+      dbQuery = dbQuery.eq('neighborhood', neighborhood)
+    }
 
-  // Filter by minimum review count
-  if (minReviews) {
-    dbQuery = dbQuery.gte('total_reviews', minReviews)
-  }
+    // Filter by minimum review count
+    if (minReviews) {
+      dbQuery = dbQuery.gte('total_reviews', minReviews)
+    }
 
-  // Pagination
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+    // Pagination
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
 
-  dbQuery = dbQuery
-    .order(sortBy, { ascending })
-    .range(from, to)
+    dbQuery = dbQuery
+      .order(sortBy, { ascending })
+      .range(from, to)
 
-  const { data, error, count } = await dbQuery
+    const { data, error, count } = await dbQuery
 
-  return {
-    data,
-    error,
-    count,
-    page,
-    pageSize,
-    totalPages: count ? Math.ceil(count / pageSize) : 0
+    return {
+      data,
+      error,
+      count,
+      page,
+      pageSize,
+      totalPages: count ? Math.ceil(count / pageSize) : 0
+    }
+  } catch (err) {
+    console.error('searchProperties exception:', err)
+    return { data: [], error: err, count: 0, page, pageSize, totalPages: 0 }
   }
 }
 
