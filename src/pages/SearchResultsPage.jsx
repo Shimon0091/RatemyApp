@@ -54,6 +54,15 @@ export default function SearchResultsPage() {
   }
 
   const loadSearchResults = async () => {
+    // Don't search when there's no query — show the "enter a search" screen instead
+    if (!query) {
+      setProperties([])
+      setTotalCount(0)
+      setTotalPages(0)
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError('')
 
