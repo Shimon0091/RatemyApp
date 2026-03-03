@@ -189,19 +189,25 @@ export default function HomePage() {
 
         {/* Stats — only show when there's real data */}
         {!loading && (stats.totalReviews > 0 || stats.totalProperties > 0) && (
-          <div className="mb-24 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            <Card className="text-center p-6 hover:shadow-medium transition-shadow">
-              <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
-                {stats.totalReviews.toLocaleString('he-IL')}
-              </div>
-              <div className="text-gray-600 font-medium text-lg">{t('stats.reviews')}</div>
-            </Card>
-            <Card className="text-center p-6 hover:shadow-medium transition-shadow">
-              <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
-                {stats.totalProperties.toLocaleString('he-IL')}
-              </div>
-              <div className="text-gray-600 font-medium text-lg">{t('stats.properties')}</div>
-            </Card>
+          <div className="mb-24 max-w-3xl mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Badge variant="secondary" className="text-sm px-3 py-1">בטא</Badge>
+              <span className="text-gray-500 text-sm">הצטרפו לקהילה הגדלה שלנו</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Card className="text-center p-6 hover:shadow-medium transition-shadow">
+                <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
+                  {stats.totalReviews.toLocaleString('he-IL')}
+                </div>
+                <div className="text-gray-600 font-medium text-lg">{t('stats.reviews')}</div>
+              </Card>
+              <Card className="text-center p-6 hover:shadow-medium transition-shadow">
+                <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
+                  {stats.totalProperties.toLocaleString('he-IL')}
+                </div>
+                <div className="text-gray-600 font-medium text-lg">{t('stats.properties')}</div>
+              </Card>
+            </div>
           </div>
         )}
 

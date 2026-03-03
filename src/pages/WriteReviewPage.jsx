@@ -300,20 +300,53 @@ export default function WriteReviewPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center px-4">
-        <Card className="p-8 max-w-md w-full text-center">
-          <Icon.Lock className="w-16 h-16 mx-auto mb-4 text-primary-500" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {t('auth.required')}
+        <Card className="p-8 max-w-lg w-full text-center">
+          <Icon.Dragon className="text-primary-500 mx-auto mb-4" style={{ width: '64px', height: '64px' }} />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            שתפו את החוויה שלכם
           </h2>
           <p className="text-gray-600 mb-6">
-            כדי לכתוב ביקורת, עליך להיות מחובר למערכת
+            הביקורת שלכם עוזרת לשוכרים אחרים לקבל החלטות מושכלות
           </p>
+
+          <div className="text-right space-y-3 mb-8 bg-gray-50 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary-100 p-2 rounded-lg flex-shrink-0">
+                <Icon.Lock className="w-5 h-5 text-primary-600" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-900 text-sm">אנונימי לחלוטין</div>
+                <div className="text-xs text-gray-500">השם שלך לא יופיע בביקורת</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-accent-100 p-2 rounded-lg flex-shrink-0">
+                <Icon.Clock className="w-5 h-5 text-accent-600" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-900 text-sm">לוקח פחות מ-5 דקות</div>
+                <div className="text-xs text-gray-500">טופס קצר עם 3 שלבים פשוטים</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-secondary-100 p-2 rounded-lg flex-shrink-0">
+                <Icon.Heart className="w-5 h-5 text-secondary-600" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-900 text-sm">תרומה לקהילה</div>
+                <div className="text-xs text-gray-500">עוזרים לשוכרים אחרים להימנע מהפתעות</div>
+              </div>
+            </div>
+          </div>
+
           <Button
             onClick={() => navigate('/login', { state: { from: '/write-review' } })}
             className="w-full"
+            size="lg"
           >
-            {t('auth.loginNow')}
+            התחברו כדי לכתוב ביקורת
           </Button>
+          <p className="text-xs text-gray-400 mt-3">ההתחברות נדרשת רק למניעת ספאם</p>
         </Card>
       </div>
     );

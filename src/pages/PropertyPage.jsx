@@ -197,7 +197,7 @@ export default function PropertyPage() {
               
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-gray-200">
-                  <div className="text-center p-4 rounded-xl bg-accent-50/50">
+                  <div className="text-center p-4 rounded-xl bg-accent-50/50 group relative">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Icon.DollarSign className="w-6 h-6 text-accent-600" />
                       <div className="text-3xl font-bold text-accent-600">
@@ -210,8 +210,11 @@ export default function PropertyPage() {
                     <div className="text-xs text-gray-500 mt-1">
                       ({property.deposit_returned_count}/{property.total_reviews})
                     </div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      אחוז השוכרים שדיווחו שקיבלו את הפיקדון בחזרה
+                    </div>
                   </div>
-                  <div className="text-center p-4 rounded-xl bg-accent-50/50">
+                  <div className="text-center p-4 rounded-xl bg-accent-50/50 group relative">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Icon.FileCheck className="w-6 h-6 text-accent-600" />
                       <div className="text-3xl font-bold text-accent-600">
@@ -224,8 +227,11 @@ export default function PropertyPage() {
                     <div className="text-xs text-gray-500 mt-1">
                       ({property.contract_respected_count}/{property.total_reviews})
                     </div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      אחוז השוכרים שדיווחו שבעל הדירה עמד בתנאי החוזה
+                    </div>
                   </div>
-                  <div className="text-center p-4 rounded-xl bg-accent-50/50">
+                  <div className="text-center p-4 rounded-xl bg-accent-50/50 group relative">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Icon.Clock className="w-6 h-6 text-accent-600" />
                       <div className="text-3xl font-bold text-accent-600">
@@ -237,6 +243,9 @@ export default function PropertyPage() {
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
                       ({property.maintenance_timely_count}/{property.total_reviews})
+                    </div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      אחוז השוכרים שדיווחו שתיקונים בוצעו בזמן סביר
                     </div>
                   </div>
                 </div>
@@ -266,7 +275,7 @@ export default function PropertyPage() {
         </Card>
         
         {/* Reviews Section */}
-        {reviews.length > 0 && (
+        {reviews.length > 0 ? (
           <div>
             <Card className="mb-6 shadow-soft">
               <CardBody className="p-6">
@@ -332,7 +341,28 @@ export default function PropertyPage() {
               ))}
             </div>
           </div>
-        )}
+        ) : property.total_reviews > 0 ? (
+          /* Metrics exist but no text reviews yet */
+          <Card className="shadow-soft">
+            <CardBody className="p-8 text-center">
+              <div className="bg-secondary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon.MessageCircle className="w-8 h-8 text-secondary-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">אין עדיין ביקורות מפורטות</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                הדירוגים מבוססים על נתונים קיימים, אבל אף אחד עדיין לא כתב ביקורת מפורטת. היו הראשונים!
+              </p>
+              <Button
+                onClick={() => navigate('/write-review')}
+                size="lg"
+                className="shadow-medium hover:shadow-strong"
+              >
+                <Icon.Dragon />
+                כתבו את הביקורת הראשונה
+              </Button>
+            </CardBody>
+          </Card>
+        ) : null}
         
         {/* CTA */}
         <Card className="mt-12 shadow-medium bg-gradient-to-br from-primary-50 via-white to-secondary-50 border-2 border-primary-100">
