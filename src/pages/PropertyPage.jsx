@@ -201,14 +201,18 @@ export default function PropertyPage() {
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Icon.Shekel className="w-6 h-6 text-accent-600" />
                       <div className="text-3xl font-bold text-accent-600">
-                        {percentage(property.deposit_returned_count, property.total_reviews)}%
+                        {property.deposit_returned_count > 0
+                          ? `${percentage(property.deposit_returned_count, property.total_reviews)}%`
+                          : '—'}
                       </div>
                     </div>
                     <div className="text-sm text-gray-700 font-medium">
                       {t('property.depositReturned')}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      ({property.deposit_returned_count}/{property.total_reviews})
+                      {property.deposit_returned_count > 0
+                        ? `(${property.deposit_returned_count}/${property.total_reviews})`
+                        : 'לא דווח'}
                     </div>
                     <div className="text-xs text-gray-400 mt-2">
                       אחוז השוכרים שדיווחו שקיבלו את הפיקדון בחזרה
@@ -218,14 +222,18 @@ export default function PropertyPage() {
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Icon.FileCheck className="w-6 h-6 text-accent-600" />
                       <div className="text-3xl font-bold text-accent-600">
-                        {percentage(property.contract_respected_count, property.total_reviews)}%
+                        {property.contract_respected_count > 0
+                          ? `${percentage(property.contract_respected_count, property.total_reviews)}%`
+                          : '—'}
                       </div>
                     </div>
                     <div className="text-sm text-gray-700 font-medium">
                       {t('property.contractRespected')}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      ({property.contract_respected_count}/{property.total_reviews})
+                      {property.contract_respected_count > 0
+                        ? `(${property.contract_respected_count}/${property.total_reviews})`
+                        : 'לא דווח'}
                     </div>
                     <div className="text-xs text-gray-400 mt-2">
                       אחוז השוכרים שדיווחו שבעל הדירה עמד בתנאי החוזה
@@ -235,14 +243,18 @@ export default function PropertyPage() {
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Icon.Clock className="w-6 h-6 text-accent-600" />
                       <div className="text-3xl font-bold text-accent-600">
-                        {percentage(property.maintenance_timely_count, property.total_reviews)}%
+                        {property.maintenance_timely_count > 0
+                          ? `${percentage(property.maintenance_timely_count, property.total_reviews)}%`
+                          : '—'}
                       </div>
                     </div>
                     <div className="text-sm text-gray-700 font-medium">
                       {t('property.timelyRepairs')}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      ({property.maintenance_timely_count}/{property.total_reviews})
+                      {property.maintenance_timely_count > 0
+                        ? `(${property.maintenance_timely_count}/${property.total_reviews})`
+                        : 'לא דווח'}
                     </div>
                     <div className="text-xs text-gray-400 mt-2">
                       אחוז השוכרים שדיווחו שתיקונים בוצעו בזמן סביר
