@@ -54,20 +54,12 @@ export default function SearchResultsPage() {
   }
 
   const loadSearchResults = async () => {
-    // Don't search when there's no query — show the "enter a search" screen instead
-    if (!query) {
-      setProperties([])
-      setTotalCount(0)
-      setTotalPages(0)
-      setLoading(false)
-      return
-    }
-
     setLoading(true)
     setError('')
 
     try {
-      const { data, error: searchError, count, totalPages: pages } = await searchProperties(query, {
+      // When no query, pass empty string to load all properties (browse mode)
+      const { data, error: searchError, count, totalPages: pages } = await searchProperties(query || '', {
         minRating,
         neighborhood,
         minReviews,
@@ -129,14 +121,16 @@ export default function SearchResultsPage() {
                 <div className="flex items-center gap-3 mb-2">
                   <Icon.Search className="w-8 h-8 text-primary-600" />
                   <h1 className="text-3xl font-bold text-gray-900">
-                    {t('search.results')}
+                    {query ? t('search.results') : 'כל הדירות'}
                   </h1>
                 </div>
-                {query && (
-                  <p className="text-gray-600 text-lg">
-                    {t('search.found')} <span className="font-bold text-primary-600">{loading ? '...' : totalCount}</span> {t('search.propertiesFor')} <span className="font-semibold text-gray-900">"{query}"</span>
-                  </p>
-                )}
+                <p className="text-gray-600 text-lg">
+                  {query ? (
+                    <>{t('search.found')} <span className="font-bold text-primary-600">{loading ? '...' : totalCount}</span> {t('search.propertiesFor')} <span className="font-semibold text-gray-900">"{query}"</span></>
+                  ) : (
+                    <>{loading ? '...' : totalCount} דירות מדורגות – חפשו כתובת או עיינו ברשימה</>
+                  )}
+                </p>
               </div>
               <Button
                 variant="ghost"
