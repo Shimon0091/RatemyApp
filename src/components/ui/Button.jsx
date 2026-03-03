@@ -26,7 +26,7 @@ export function Button({
   return (
     <button
       className={cn(
-        'rounded-xl font-semibold transition-all duration-200',
+        'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-200',
         'shadow-soft hover:shadow-medium',
         'disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none',
         'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',

@@ -56,6 +56,12 @@ export const Icon = {
   Calendar: (props) => <Calendar className="w-4 h-4" {...props} />,
   Dollar: (props) => <DollarSign className="w-4 h-4" {...props} />,
   DollarSign: (props) => <DollarSign className="w-5 h-5" {...props} />,
+  Shekel: ({ className = "w-5 h-5", ...props }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+      <path d="M6 19V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8" />
+      <path d="M18 5v14a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h4" />
+    </svg>
+  ),
   TrendingUp: (props) => <TrendingUp className="w-5 h-5" {...props} />,
   Clock: (props) => <Clock className="w-5 h-5" {...props} />,
   Filter: (props) => <Filter className="w-5 h-5" {...props} />,

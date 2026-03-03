@@ -109,8 +109,8 @@ export default function HomePage() {
         </div>
 
         {/* Two Paths */}
-        <div className="max-w-6xl mx-auto mb-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card hover className="p-10 transform transition-all hover:scale-105">
+        <div className="max-w-6xl mx-auto mb-24 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+          <Card hover className="p-10 transform transition-all hover:scale-105 flex flex-col">
             <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-medium">
               <Icon.Eye className="w-10 h-10 text-white" />
             </div>
@@ -142,13 +142,13 @@ export default function HomePage() {
             </ul>
             <Link
               to="/search"
-              className="block w-full px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-bold hover:from-primary-700 hover:to-primary-800 transition-all shadow-medium hover:shadow-strong text-lg transform hover:scale-105 text-center"
+              className="block w-full px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-bold hover:from-primary-700 hover:to-primary-800 transition-all shadow-medium hover:shadow-strong text-lg transform hover:scale-105 text-center mt-auto"
             >
               {t('hero.ctaSearch')}
             </Link>
           </Card>
 
-          <Card hover className="p-10 transform transition-all hover:scale-105">
+          <Card hover className="p-10 transform transition-all hover:scale-105 flex flex-col">
             <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-medium">
               <Icon.Edit className="w-10 h-10 text-white" />
             </div>
@@ -180,7 +180,7 @@ export default function HomePage() {
             </ul>
             <Link
               to="/write-review"
-              className="block w-full px-8 py-4 bg-gradient-to-r from-accent-600 to-accent-700 text-white rounded-xl font-bold hover:from-accent-700 hover:to-accent-800 transition-all shadow-medium hover:shadow-strong text-lg transform hover:scale-105 text-center"
+              className="block w-full px-8 py-4 bg-gradient-to-r from-accent-600 to-accent-700 text-white rounded-xl font-bold hover:from-accent-700 hover:to-accent-800 transition-all shadow-medium hover:shadow-strong text-lg transform hover:scale-105 text-center mt-auto"
             >
               {t('hero.ctaWrite')}
             </Link>

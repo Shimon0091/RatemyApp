@@ -199,7 +199,7 @@ export default function PropertyPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-gray-200">
                   <div className="text-center p-4 rounded-xl bg-accent-50/50 group relative">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <Icon.DollarSign className="w-6 h-6 text-accent-600" />
+                      <Icon.Shekel className="w-6 h-6 text-accent-600" />
                       <div className="text-3xl font-bold text-accent-600">
                         {percentage(property.deposit_returned_count, property.total_reviews)}%
                       </div>
