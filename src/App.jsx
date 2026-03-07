@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
 import ErrorBoundary from './components/ErrorBoundary'
+import CookieBanner from './components/CookieBanner'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -57,6 +58,7 @@ function App() {
           </Routes>
         </Suspense>
       </AuthProvider>
+        <CookieBanner />
     </ErrorBoundary>
   )
 }
