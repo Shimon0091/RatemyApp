@@ -319,11 +319,14 @@ CREATE POLICY "Profiles are viewable by everyone"
   ON user_profiles FOR SELECT
   USING (true);
 
--- User Profiles: Users can update own profile
+-- User Profiles: Users can update own profile (role field locked)
 CREATE POLICY "Users can update own profile"
   ON user_profiles FOR UPDATE
   USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK (
+    auth.uid() = id
+    AND role = (SELECT role FROM user_profiles WHERE id = auth.uid())
+  );
 
 -- ======================
 -- SAMPLE DATA (Optional)

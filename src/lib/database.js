@@ -289,11 +289,23 @@ export async function getReviewById(reviewId, userId) {
   return { data, error }
 }
 
-// Update review
+// Update review (allowlisted fields only - prevents mass assignment)
 export async function updateReview(reviewId, updates) {
+  const allowedFields = [
+    'review_text', 'overall_rating', 'maintenance_rating',
+    'communication_rating', 'value_rating', 'tags',
+    'rental_start', 'rental_end', 'monthly_rent'
+  ]
+  const safeUpdates = { status: 'pending' }
+  for (const field of allowedFields) {
+    if (field in updates) {
+      safeUpdates[field] = updates[field]
+    }
+  }
+
   const { data, error } = await supabase
     .from('reviews')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', reviewId)
     .select()
     .single()
