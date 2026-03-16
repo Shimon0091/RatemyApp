@@ -102,31 +102,32 @@ export default function AdminDashboard() {
         setReports(reportsData || [])
       }
 
-      // Get stats
-      const { data: reviewsData } = await supabase
-        .from('reviews')
-        .select('status')
-
-      const { data: propertiesData } = await supabase
-        .from('properties')
-        .select('id')
-
-      const { data: usersData } = await supabase
-        .from('user_profiles')
-        .select('id')
-
-      const { count: reportsCount } = await supabase
-        .from('review_reports')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
+      // Get stats using count queries (efficient, no row limit issues)
+      const [
+        { count: totalReviews },
+        { count: pendingReviewsCount },
+        { count: approvedReviews },
+        { count: rejectedReviews },
+        { count: totalProperties },
+        { count: totalUsers },
+        { count: reportsCount }
+      ] = await Promise.all([
+        supabase.from('reviews').select('*', { count: 'exact', head: true }),
+        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+        supabase.from('properties').select('*', { count: 'exact', head: true }),
+        supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('review_reports').select('*', { count: 'exact', head: true }).eq('status', 'pending')
+      ])
 
       setStats({
-        totalReviews: reviewsData?.length || 0,
-        pendingReviews: reviewsData?.filter(r => r.status === 'pending').length || 0,
-        approvedReviews: reviewsData?.filter(r => r.status === 'approved').length || 0,
-        rejectedReviews: reviewsData?.filter(r => r.status === 'rejected').length || 0,
-        totalProperties: propertiesData?.length || 0,
-        totalUsers: usersData?.length || 0,
+        totalReviews: totalReviews || 0,
+        pendingReviews: pendingReviewsCount || 0,
+        approvedReviews: approvedReviews || 0,
+        rejectedReviews: rejectedReviews || 0,
+        totalProperties: totalProperties || 0,
+        totalUsers: totalUsers || 0,
         pendingReports: reportsCount || 0
       })
 

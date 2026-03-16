@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
-import { getUserReviews, updateReview } from '../lib/database'
+import { getReviewById, updateReview } from '../lib/database'
 import { logger } from '../utils/logger'
 import Icon from '../components/icons'
 import { Button } from '../components/ui/Button'
@@ -51,11 +51,9 @@ export default function EditReviewPage() {
     setError('')
 
     try {
-      const { data: reviews, error: reviewsError } = await getUserReviews(user.id)
+      const { data: reviewToEdit, error: reviewError } = await getReviewById(id, user.id)
 
-      if (reviewsError) throw reviewsError
-
-      const reviewToEdit = reviews.find(r => r.id === id)
+      if (reviewError) throw reviewError
 
       if (!reviewToEdit) {
         setError(t('editReview.notFound'))

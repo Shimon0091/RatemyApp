@@ -235,10 +235,17 @@ CREATE POLICY "Properties are viewable by everyone"
   ON properties FOR SELECT
   USING (true);
 
--- Reviews: Everyone can read approved reviews
+-- Reviews: Everyone can read approved reviews + own reviews + admins can read all
 CREATE POLICY "Approved reviews are viewable by everyone"
   ON reviews FOR SELECT
-  USING (status = 'approved' OR auth.uid() = user_id);
+  USING (
+    status = 'approved'
+    OR auth.uid() = user_id
+    OR EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
 
 -- Reviews: Users can create their own reviews
 CREATE POLICY "Users can create reviews"
@@ -251,14 +258,60 @@ CREATE POLICY "Users can update own reviews"
   USING (auth.uid() = user_id AND status = 'pending')
   WITH CHECK (auth.uid() = user_id);
 
+-- Reviews: Admins can moderate (update) any review
+CREATE POLICY "Admins can moderate reviews"
+  ON reviews FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Reviews: Users can delete their own reviews
+CREATE POLICY "Users can delete own reviews"
+  ON reviews FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- Review Reports: Users can create reports
 CREATE POLICY "Users can create reports"
   ON review_reports FOR INSERT
   WITH CHECK (auth.uid() = reported_by);
 
+-- Review Reports: Admins can read all reports
+CREATE POLICY "Admins can read reports"
+  ON review_reports FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
+-- Review Reports: Admins can update reports (resolve/dismiss)
+CREATE POLICY "Admins can update reports"
+  ON review_reports FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
 -- Review Helpfulness: Users can vote
 CREATE POLICY "Users can vote on helpfulness"
   ON review_helpfulness FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Review Helpfulness: Users can read votes (to check existing vote)
+CREATE POLICY "Users can read own votes"
+  ON review_helpfulness FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Review Helpfulness: Users can update own votes
+CREATE POLICY "Users can update own votes"
+  ON review_helpfulness FOR UPDATE
+  USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- User Profiles: Users can read all profiles

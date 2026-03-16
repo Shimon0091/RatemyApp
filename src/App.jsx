@@ -57,8 +57,8 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
-      </AuthProvider>
         <CookieBanner />
+      </AuthProvider>
     </ErrorBoundary>
   )
 }

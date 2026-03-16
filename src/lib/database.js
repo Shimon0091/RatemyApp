@@ -4,39 +4,42 @@ import { supabase } from './supabase'
 // PROPERTIES
 // ======================
 
-// Get or create property
+// Get or create property (uses upsert to avoid race conditions)
 export async function getOrCreateProperty(addressData) {
   const { street, buildingNumber, floor, apartment, city } = addressData
-  
-  // Check if property exists
-  const { data: existing, error: searchError } = await supabase
-    .from('properties')
-    .select('*')
-    .eq('street', street)
-    .eq('building_number', buildingNumber)
-    .eq('floor', floor)
-    .eq('apartment', apartment)
-    .eq('city', city)
-    .single()
 
-  if (existing) {
-    return { data: existing, error: null }
-  }
-
-  // Create new property
-  const { data: newProperty, error: createError } = await supabase
+  // Use upsert to handle concurrent submissions safely
+  const { data, error } = await supabase
     .from('properties')
-    .insert([{
-      street,
-      building_number: buildingNumber,
-      floor,
-      apartment,
-      city
-    }])
+    .upsert(
+      {
+        street,
+        building_number: buildingNumber,
+        floor,
+        apartment,
+        city
+      },
+      { onConflict: 'street,building_number,floor,apartment,city', ignoreDuplicates: true }
+    )
     .select()
     .single()
 
-  return { data: newProperty, error: createError }
+  // If upsert with ignoreDuplicates returns nothing, fetch the existing record
+  if (!data && !error) {
+    const { data: existing, error: fetchError } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('street', street)
+      .eq('building_number', buildingNumber)
+      .eq('floor', floor)
+      .eq('apartment', apartment)
+      .eq('city', city)
+      .single()
+
+    return { data: existing, error: fetchError }
+  }
+
+  return { data, error }
 }
 
 // Get property by ID
@@ -265,6 +268,27 @@ export async function getUserReviews(userId) {
   return { data, error }
 }
 
+// Get a single review by ID (for editing)
+export async function getReviewById(reviewId, userId) {
+  const { data, error } = await supabase
+    .from('reviews')
+    .select(`
+      *,
+      properties (
+        street,
+        building_number,
+        floor,
+        apartment,
+        city
+      )
+    `)
+    .eq('id', reviewId)
+    .eq('user_id', userId)
+    .single()
+
+  return { data, error }
+}
+
 // Update review
 export async function updateReview(reviewId, updates) {
   const { data, error } = await supabase
@@ -302,11 +326,33 @@ export async function voteReviewHelpfulness(reviewId, userId, isHelpful) {
     .single()
 
   if (existing) {
+    // If same vote, do nothing
+    if (existing.is_helpful === isHelpful) {
+      return { error: null }
+    }
+
     // Update existing vote
     const { error } = await supabase
       .from('review_helpfulness')
       .update({ is_helpful: isHelpful })
       .eq('id', existing.id)
+
+    // Swap counts: decrement old, increment new
+    if (!error) {
+      const { data: review } = await supabase
+        .from('reviews')
+        .select('helpful_count, not_helpful_count')
+        .eq('id', reviewId)
+        .single()
+
+      if (review) {
+        const updates = isHelpful
+          ? { helpful_count: (review.helpful_count || 0) + 1, not_helpful_count: Math.max(0, (review.not_helpful_count || 0) - 1) }
+          : { not_helpful_count: (review.not_helpful_count || 0) + 1, helpful_count: Math.max(0, (review.helpful_count || 0) - 1) }
+
+        await supabase.from('reviews').update(updates).eq('id', reviewId)
+      }
+    }
 
     return { error }
   }
@@ -320,13 +366,21 @@ export async function voteReviewHelpfulness(reviewId, userId, isHelpful) {
       is_helpful: isHelpful
     }])
 
-  // Update helpful counts on review
+  // Update helpful count on review
   if (!error) {
-    const field = isHelpful ? 'helpful_count' : 'not_helpful_count'
-    await supabase.rpc('increment', {
-      row_id: reviewId,
-      column_name: field
-    })
+    const { data: review } = await supabase
+      .from('reviews')
+      .select('helpful_count, not_helpful_count')
+      .eq('id', reviewId)
+      .single()
+
+    if (review) {
+      const field = isHelpful ? 'helpful_count' : 'not_helpful_count'
+      await supabase
+        .from('reviews')
+        .update({ [field]: (review[field] || 0) + 1 })
+        .eq('id', reviewId)
+    }
   }
 
   return { error }
@@ -351,11 +405,15 @@ export async function reportReview(reviewId, userId, reason, details) {
 
   // Increment report count on review
   if (!error) {
+    const { data: current } = await supabase
+      .from('reviews')
+      .select('report_count')
+      .eq('id', reviewId)
+      .single()
+
     await supabase
       .from('reviews')
-      .update({ 
-        report_count: supabase.raw('report_count + 1')
-      })
+      .update({ report_count: (current?.report_count || 0) + 1 })
       .eq('id', reviewId)
   }
 

@@ -1,14 +1,9 @@
-// Fallback admin emails (only if DB check fails)
-export const FALLBACK_ADMIN_EMAILS = [
-  'SHIMON@FRAME-5.COM',
-  'shimon0091@gmail.com',
-]
-
-// Get admin emails from environment or fallback
+// Get admin emails from environment variable
+// Set VITE_ADMIN_EMAILS in .env (comma-separated)
 export const getAdminEmails = () => {
   const envEmails = import.meta.env.VITE_ADMIN_EMAILS
   if (envEmails) {
     return envEmails.split(',').map(e => e.trim())
   }
-  return FALLBACK_ADMIN_EMAILS
+  return []
 }
