@@ -70,6 +70,9 @@
     "depositReturned": "Full Deposit Returned",
     "contractRespected": "Contract Terms Respected",
     "timelyRepairs": "Timely Repairs",
+    "parkingAvailable": "Parking Available",
+    "niceNeighbors": "Nice Neighbors",
+    "nearbyAmenities": "Near Shops/Services",
     "noReviewsYet": "No reviews yet for this property",
     "beFirst": "Be the first to write a review and help other renters!",
     "writeFirstReview": "Write the First Review",
@@ -88,7 +91,10 @@
     "maintenanceTimely": "Timely maintenance",
     "responsive": "Responsive communication",
     "clean": "Clean",
-    "quiet": "Quiet"
+    "quiet": "Quiet",
+    "parkingAvailable": "Parking Available",
+    "niceNeighbors": "Nice Neighbors",
+    "nearbyAmenities": "Near Shops/Services"
   },
   "common": {
     "loading": "Loading...",

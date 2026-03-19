@@ -35,6 +35,9 @@ export default function EditReviewPage() {
   const [contractRespected, setContractRespected] = useState(null)
   const [maintenanceTimely, setMaintenanceTimely] = useState(null)
   const [responsive, setResponsive] = useState(null)
+  const [parkingAvailable, setParkingAvailable] = useState(null)
+  const [niceNeighbors, setNiceNeighbors] = useState(null)
+  const [nearbyAmenities, setNearbyAmenities] = useState(null)
 
   useEffect(() => {
     if (!authLoading) {
@@ -81,6 +84,9 @@ export default function EditReviewPage() {
         setContractRespected(reviewToEdit.tags.contractRespected ?? null)
         setMaintenanceTimely(reviewToEdit.tags.maintenanceTimely ?? null)
         setResponsive(reviewToEdit.tags.responsive ?? null)
+        setParkingAvailable(reviewToEdit.tags.parkingAvailable ?? null)
+        setNiceNeighbors(reviewToEdit.tags.niceNeighbors ?? null)
+        setNearbyAmenities(reviewToEdit.tags.nearbyAmenities ?? null)
       }
     } catch (err) {
       logger.error('Error loading review:', err)
@@ -119,7 +125,10 @@ export default function EditReviewPage() {
           depositReturned,
           contractRespected,
           maintenanceTimely,
-          responsive
+          responsive,
+          parkingAvailable,
+          niceNeighbors,
+          nearbyAmenities
         },
         status: 'pending' // Reset to pending for re-approval
       }
@@ -384,6 +393,98 @@ export default function EditReviewPage() {
                         onClick={() => setResponsive(false)}
                         className={`px-4 py-2 rounded-lg font-medium transition-all ${
                           responsive === false
+                            ? 'bg-red-500 text-white shadow-medium'
+                            : 'bg-white text-gray-700 border border-gray-300'
+                        }`}
+                      >
+                        {t('common.no')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Neighborhood Tags */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <h4 className="text-md font-bold text-gray-900 mb-3">על השכונה</h4>
+                  </div>
+
+                  {/* Parking Available */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span className="text-gray-700">{t('tags.parkingAvailable')}</span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setParkingAvailable(true)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          parkingAvailable === true
+                            ? 'bg-accent-500 text-white shadow-medium'
+                            : 'bg-white text-gray-700 border border-gray-300'
+                        }`}
+                      >
+                        {t('common.yes')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setParkingAvailable(false)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          parkingAvailable === false
+                            ? 'bg-red-500 text-white shadow-medium'
+                            : 'bg-white text-gray-700 border border-gray-300'
+                        }`}
+                      >
+                        {t('common.no')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Nice Neighbors */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span className="text-gray-700">{t('tags.niceNeighbors')}</span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNiceNeighbors(true)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          niceNeighbors === true
+                            ? 'bg-accent-500 text-white shadow-medium'
+                            : 'bg-white text-gray-700 border border-gray-300'
+                        }`}
+                      >
+                        {t('common.yes')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNiceNeighbors(false)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          niceNeighbors === false
+                            ? 'bg-red-500 text-white shadow-medium'
+                            : 'bg-white text-gray-700 border border-gray-300'
+                        }`}
+                      >
+                        {t('common.no')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Nearby Amenities */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span className="text-gray-700">{t('tags.nearbyAmenities')}</span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNearbyAmenities(true)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          nearbyAmenities === true
+                            ? 'bg-accent-500 text-white shadow-medium'
+                            : 'bg-white text-gray-700 border border-gray-300'
+                        }`}
+                      >
+                        {t('common.yes')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNearbyAmenities(false)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          nearbyAmenities === false
                             ? 'bg-red-500 text-white shadow-medium'
                             : 'bg-white text-gray-700 border border-gray-300'
                         }`}

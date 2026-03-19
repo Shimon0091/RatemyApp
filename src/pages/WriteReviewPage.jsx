@@ -47,6 +47,9 @@ export default function WriteReviewPage() {
   const [depositReturned, setDepositReturned] = useState(null);
   const [contractRespected, setContractRespected] = useState(null);
   const [repairsTimely, setRepairsTimely] = useState(null);
+  const [parkingAvailable, setParkingAvailable] = useState(null);
+  const [niceNeighbors, setNiceNeighbors] = useState(null);
+  const [nearbyAmenities, setNearbyAmenities] = useState(null);
   const [rentAmount, setRentAmount] = useState('');
   const [moveInDate, setMoveInDate] = useState('');
   const [moveOutDate, setMoveOutDate] = useState('');
@@ -246,6 +249,15 @@ export default function WriteReviewPage() {
       }
       if (repairsTimely !== null) {
         tags.maintenanceTimely = repairsTimely;
+      }
+      if (parkingAvailable !== null) {
+        tags.parkingAvailable = parkingAvailable;
+      }
+      if (niceNeighbors !== null) {
+        tags.niceNeighbors = niceNeighbors;
+      }
+      if (nearbyAmenities !== null) {
+        tags.nearbyAmenities = nearbyAmenities;
       }
 
       const reviewData = {
@@ -744,6 +756,107 @@ export default function WriteReviewPage() {
                         onClick={() => setRepairsTimely(false)}
                         className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
                           repairsTimely === false
+                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <Icon.XMark className="w-5 h-5" />
+                        {t('review.no')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Neighborhood Tags */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-gray-900">על השכונה</h3>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      האם יש חניה זמינה באזור?
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setParkingAvailable(true)}
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                          parkingAvailable === true
+                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <Icon.Check className="w-5 h-5" />
+                        {t('review.yes')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setParkingAvailable(false)}
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                          parkingAvailable === false
+                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <Icon.XMark className="w-5 h-5" />
+                        {t('review.no')}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      האם השכנים נעימים?
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setNiceNeighbors(true)}
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                          niceNeighbors === true
+                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <Icon.Check className="w-5 h-5" />
+                        {t('review.yes')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNiceNeighbors(false)}
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                          niceNeighbors === false
+                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <Icon.XMark className="w-5 h-5" />
+                        {t('review.no')}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      האם יש חנויות ושירותים בקרבת מקום?
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setNearbyAmenities(true)}
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                          nearbyAmenities === true
+                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
+                            : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <Icon.Check className="w-5 h-5" />
+                        {t('review.yes')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNearbyAmenities(false)}
+                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
+                          nearbyAmenities === false
                             ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
                             : 'border-gray-300 hover:border-gray-400'
                         }`}

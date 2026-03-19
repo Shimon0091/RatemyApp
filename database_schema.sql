@@ -29,7 +29,10 @@ CREATE TABLE IF NOT EXISTS properties (
   deposit_returned_count INTEGER DEFAULT 0,
   contract_respected_count INTEGER DEFAULT 0,
   maintenance_timely_count INTEGER DEFAULT 0,
-  
+  parking_available_count INTEGER DEFAULT 0,
+  nice_neighbors_count INTEGER DEFAULT 0,
+  nearby_amenities_count INTEGER DEFAULT 0,
+
   -- Metadata
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
@@ -179,6 +182,27 @@ BEGIN
         AND status = 'approved'
         AND tags->>'maintenanceTimely' = 'true'
     ),
+    parking_available_count = (
+      SELECT COUNT(*)
+      FROM reviews
+      WHERE property_id = NEW.property_id
+        AND status = 'approved'
+        AND tags->>'parkingAvailable' = 'true'
+    ),
+    nice_neighbors_count = (
+      SELECT COUNT(*)
+      FROM reviews
+      WHERE property_id = NEW.property_id
+        AND status = 'approved'
+        AND tags->>'niceNeighbors' = 'true'
+    ),
+    nearby_amenities_count = (
+      SELECT COUNT(*)
+      FROM reviews
+      WHERE property_id = NEW.property_id
+        AND status = 'approved'
+        AND tags->>'nearbyAmenities' = 'true'
+    ),
     updated_at = NOW()
   WHERE id = NEW.property_id;
   
@@ -207,7 +231,7 @@ $$ LANGUAGE plpgsql;
 -- Update property ratings when review is added/updated
 DROP TRIGGER IF EXISTS update_property_ratings_trigger ON reviews;
 CREATE TRIGGER update_property_ratings_trigger
-  AFTER INSERT OR UPDATE OF status, overall_rating
+  AFTER INSERT OR UPDATE OF status, overall_rating, tags
   ON reviews
   FOR EACH ROW
   EXECUTE FUNCTION update_property_ratings();

@@ -70,6 +70,9 @@
     "depositReturned": "החזרת פיקדון במלואו",
     "contractRespected": "עמידה בתנאי החוזה",
     "timelyRepairs": "תיקונים בזמן סביר",
+    "parkingAvailable": "חניה זמינה",
+    "niceNeighbors": "שכנים נעימים",
+    "nearbyAmenities": "קרוב לחנויות/שירותים",
     "noReviewsYet": "עדיין אין דירגונים על הדירה הזו",
     "beFirst": "היה הראשון לכתוב דירגון ולעזור לשוכרים אחרים!",
     "writeFirstReview": "כתוב את הדירגון הראשון",
@@ -88,7 +91,10 @@
     "maintenanceTimely": "תיקונים בזמן",
     "responsive": "תקשורת מהירה",
     "clean": "נקייה",
-    "quiet": "שקט"
+    "quiet": "שקט",
+    "parkingAvailable": "חניה זמינה",
+    "niceNeighbors": "שכנים נעימים",
+    "nearbyAmenities": "קרוב לחנויות/שירותים"
   },
   "common": {
     "loading": "טוען נתונים...",

@@ -196,7 +196,7 @@ export default function PropertyPage() {
                 </div>
               
                 {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-gray-200">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-8 border-t border-gray-200">
                   <div className="text-center p-4 rounded-xl bg-accent-50/50 group relative">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <Icon.Shekel className="w-6 h-6 text-accent-600" />
@@ -258,6 +258,69 @@ export default function PropertyPage() {
                     </div>
                     <div className="text-xs text-gray-400 mt-2">
                       אחוז השוכרים שדיווחו שתיקונים בוצעו בזמן סביר
+                    </div>
+                  </div>
+                  <div className="text-center p-4 rounded-xl bg-blue-50/50 group relative">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Icon.MapPin className="w-6 h-6 text-blue-600" />
+                      <div className="text-3xl font-bold text-blue-600">
+                        {property.parking_available_count > 0
+                          ? `${percentage(property.parking_available_count, property.total_reviews)}%`
+                          : '—'}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-700 font-medium">
+                      {t('property.parkingAvailable')}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {property.parking_available_count > 0
+                        ? `(${property.parking_available_count}/${property.total_reviews})`
+                        : 'לא דווח'}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      אחוז השוכרים שדיווחו שיש חניה זמינה
+                    </div>
+                  </div>
+                  <div className="text-center p-4 rounded-xl bg-blue-50/50 group relative">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Icon.Heart className="w-6 h-6 text-blue-600" />
+                      <div className="text-3xl font-bold text-blue-600">
+                        {property.nice_neighbors_count > 0
+                          ? `${percentage(property.nice_neighbors_count, property.total_reviews)}%`
+                          : '—'}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-700 font-medium">
+                      {t('property.niceNeighbors')}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {property.nice_neighbors_count > 0
+                        ? `(${property.nice_neighbors_count}/${property.total_reviews})`
+                        : 'לא דווח'}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      אחוז השוכרים שדיווחו על שכנים נעימים
+                    </div>
+                  </div>
+                  <div className="text-center p-4 rounded-xl bg-blue-50/50 group relative">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Icon.Building className="w-6 h-6 text-blue-600" />
+                      <div className="text-3xl font-bold text-blue-600">
+                        {property.nearby_amenities_count > 0
+                          ? `${percentage(property.nearby_amenities_count, property.total_reviews)}%`
+                          : '—'}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-700 font-medium">
+                      {t('property.nearbyAmenities')}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {property.nearby_amenities_count > 0
+                        ? `(${property.nearby_amenities_count}/${property.total_reviews})`
+                        : 'לא דווח'}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      אחוז השוכרים שדיווחו על קרבה לחנויות ושירותים
                     </div>
                   </div>
                 </div>
@@ -344,7 +407,10 @@ export default function PropertyPage() {
                           maintenanceTimely: t('tags.maintenanceTimely'),
                           responsive: t('tags.responsive'),
                           clean: t('tags.clean'),
-                          quiet: t('tags.quiet')
+                          quiet: t('tags.quiet'),
+                          parkingAvailable: t('tags.parkingAvailable'),
+                          niceNeighbors: t('tags.niceNeighbors'),
+                          nearbyAmenities: t('tags.nearbyAmenities')
                         }[key],
                         positive: value
                       })) : []
