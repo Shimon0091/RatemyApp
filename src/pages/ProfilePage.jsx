@@ -3,15 +3,17 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
+import Footer from '../components/Footer'
 import { getUserReviews, deleteReview } from '../lib/database'
 import RatingStars from '../components/RatingStars'
+import { useScrollReveal } from '../hooks/useScrollReveal'
 import { logger } from '../utils/logger'
-import Icon from '../components/icons'
-import { Button } from '../components/ui/Button'
-import { Card, CardBody } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { Modal } from '../components/ui/Modal'
+import {
+  LineDoc, LineCheck, LineClock, LineX, LinePin, LineEdit,
+  LineUser, LineArrowLeft, LineAlert, LineBadgeCheck,
+} from '../components/icons/line'
 
 export default function ProfilePage() {
   const { t } = useTranslation()
@@ -29,6 +31,8 @@ export default function ProfilePage() {
   const [reviewToDelete, setReviewToDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [successMessage, setSuccessMessage] = useState(location.state?.message || '')
+
+  useScrollReveal([loading, reviews.length])
 
   useEffect(() => {
     if (!authLoading) {
@@ -83,7 +87,6 @@ export default function ProfilePage() {
       setDeleteModalOpen(false)
       setReviewToDelete(null)
 
-      // Reload reviews
       await loadUserData()
     } catch (err) {
       logger.error('Error deleting review:', err)
@@ -95,12 +98,15 @@ export default function ProfilePage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      <div className="bg-canvas text-ink font-body min-h-screen flex flex-col">
         <Header />
-        <div className="container mx-auto px-4 py-16 text-center">
-          <LoadingSpinner size="xl" />
-          <div className="text-xl text-gray-600 mt-4">{t('profile.loadingProfile')}</div>
+        <div className="flex-1 grid place-items-center px-5 py-24 text-center">
+          <div>
+            <span className="mx-auto block w-10 h-10 rounded-full border-4 border-petrol/20 border-t-petrol animate-spin" />
+            <p className="mt-4 text-muted">{t('profile.loadingProfile')}</p>
+          </div>
         </div>
+        <Footer />
       </div>
     )
   }
@@ -109,114 +115,87 @@ export default function ProfilePage() {
     return null
   }
 
+  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0]
+
+  const statCards = [
+    { Icon: LineDoc, value: stats.totalReviews, label: t('profile.totalReviews') },
+    { Icon: LineCheck, value: stats.approvedReviews, label: t('profile.approvedReviews') },
+    { Icon: LineClock, value: stats.pendingReviews, label: t('profile.pendingReviews') },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Profile Header */}
-        <Card className="mb-8 shadow-medium">
-          <CardBody className="p-8">
-            <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
-              <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center text-3xl font-bold text-primary-700 shadow-soft">
-                  {user.user_metadata?.avatar_url ? (
-                    <img
-                      src={user.user_metadata.avatar_url}
-                      alt="Profile"
-                      className="w-24 h-24 rounded-full object-cover"
-                    />
-                  ) : (
-                    <span>{user.email?.[0].toUpperCase()}</span>
-                  )}
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-accent-500 rounded-full flex items-center justify-center shadow-medium">
-                  <Icon.Check className="w-5 h-5 text-white" />
-                </div>
+      {/* Profile hero */}
+      <section className="bg-petrol text-white">
+        <div className="max-w-5xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-2xl bg-white/10 grid place-items-center text-3xl font-heading font-black shadow-lift overflow-hidden">
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="" className="w-20 h-20 object-cover" />
+                ) : (
+                  <span>{user.email?.[0].toUpperCase()}</span>
+                )}
               </div>
-              <div className="flex-1">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                  {user.user_metadata?.full_name || user.email?.split('@')[0]}
-                </h1>
-                <p className="text-gray-600 flex items-center gap-2">
-                  <Icon.User className="w-4 h-4" />
-                  {user.email}
-                </p>
-              </div>
+              <span className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-full bg-amber text-white shadow">
+                <LineBadgeCheck width="16" height="16" />
+              </span>
             </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-gray-200">
-              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-primary-50 to-white">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Icon.FileText className="w-6 h-6 text-primary-600" />
-                  <div className="text-3xl font-bold text-primary-600">
-                    {stats.totalReviews}
-                  </div>
-                </div>
-                <div className="text-sm text-gray-700 font-medium">{t('profile.totalReviews')}</div>
-              </div>
-              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-accent-50 to-white">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Icon.Check className="w-6 h-6 text-accent-600" />
-                  <div className="text-3xl font-bold text-accent-600">
-                    {stats.approvedReviews}
-                  </div>
-                </div>
-                <div className="text-sm text-gray-700 font-medium">{t('profile.approvedReviews')}</div>
-              </div>
-              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-yellow-50 to-white">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <Icon.Clock className="w-6 h-6 text-yellow-600" />
-                  <div className="text-3xl font-bold text-yellow-600">
-                    {stats.pendingReviews}
-                  </div>
-                </div>
-                <div className="text-sm text-gray-700 font-medium">{t('profile.pendingReviews')}</div>
-              </div>
+            <div>
+              <h1 className="font-heading font-black text-3xl lg:text-4xl">{displayName}</h1>
+              <p className="mt-1.5 text-white/80 flex items-center gap-2" dir="ltr">
+                <LineUser width="16" height="16" /> {user.email}
+              </p>
             </div>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
+      </section>
 
-        {/* Success Message */}
-        {successMessage && (
-          <Card className="mb-6 shadow-soft bg-accent-50 border-2 border-accent-200">
-            <CardBody className="p-4">
-              <div className="flex items-center gap-3">
-                <Icon.Check className="w-6 h-6 text-accent-600" />
-                <p className="text-accent-800 font-medium">{successMessage}</p>
-                <button
-                  onClick={() => setSuccessMessage('')}
-                  className="ml-auto text-accent-600 hover:text-accent-800"
-                >
-                  <Icon.XCircle className="w-5 h-5" />
-                </button>
+      <main id="main-content" className="flex-1">
+        <div className="max-w-5xl mx-auto px-5 lg:px-8 -mt-8 lg:-mt-10 pb-20">
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3 sm:gap-5">
+            {statCards.map(({ Icon, value, label }) => (
+              <div key={label} className="bg-white rounded-2xl shadow-card border border-black/5 p-5 text-center">
+                <span className="mx-auto grid place-items-center w-10 h-10 rounded-xl bg-petrol-50 text-petrol mb-3">
+                  <Icon width="20" height="20" />
+                </span>
+                <div className="font-heading font-black text-3xl text-ink">{value}</div>
+                <div className="text-xs sm:text-sm text-muted mt-1">{label}</div>
               </div>
-            </CardBody>
-          </Card>
-        )}
+            ))}
+          </div>
 
-        {/* Reviews Section */}
-        <div>
-          <Card className="mb-6 shadow-soft">
-            <CardBody className="p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Icon.FileText className="w-6 h-6 text-primary-600" />
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {t('profile.myReviews')} ({reviews.length})
-                  </h2>
-                </div>
-                <Button onClick={() => navigate('/write-review')} className="flex items-center gap-2">
-                  <Icon.Edit />
-                  {t('profile.writeNew')}
-                </Button>
-              </div>
-            </CardBody>
-          </Card>
+          {/* Success message */}
+          {successMessage && (
+            <div className="mt-6 p-4 rounded-xl bg-petrol-50 border border-petrol/15 flex items-center gap-3">
+              <LineCheck className="text-petrol shrink-0" width="20" height="20" />
+              <p className="text-petrol font-medium flex-1">{successMessage}</p>
+              <button onClick={() => setSuccessMessage('')} className="text-petrol/60 hover:text-petrol" aria-label="סגור">
+                <LineX width="18" height="18" />
+              </button>
+            </div>
+          )}
 
+          {/* Reviews header */}
+          <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h2 className="font-heading font-bold text-2xl text-ink flex items-center gap-2.5">
+              <LineDoc className="text-petrol" width="24" height="24" />
+              {t('profile.myReviews')} ({reviews.length})
+            </h2>
+            <button
+              onClick={() => navigate('/write-review')}
+              className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-5 py-2.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+            >
+              <LineEdit width="18" height="18" /> {t('profile.writeNew')}
+            </button>
+          </div>
+
+          {/* Reviews list */}
           {reviews.length > 0 ? (
-            <div className="space-y-6">
+            <div className="mt-6 space-y-5">
               {reviews.map((review) => {
                 const property = review.properties
                 const address = property
@@ -224,180 +203,153 @@ export default function ProfilePage() {
                   : t('profile.propertyNotAvailable')
 
                 return (
-                  <Card
+                  <article
                     key={review.id}
-                    className="shadow-soft hover:shadow-medium transition-all"
+                    className="reveal lift bg-white rounded-2xl shadow-card border border-black/5 p-6"
                   >
-                    <CardBody className="p-6">
-                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
-                        <div className="flex-1">
-                          <Link
-                            to={property ? `/property/${property.id}` : '#'}
-                            className="flex items-start gap-2 group mb-3"
-                          >
-                            <Icon.MapPin className="w-5 h-5 text-primary-500 mt-1 flex-shrink-0" />
-                            <span className="text-xl font-bold text-gray-900 group-hover:text-primary-600 transition-colors">
-                              {address}
-                            </span>
-                          </Link>
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-3">
-                            <RatingStars rating={review.overall_rating} size="md" />
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Icon.Calendar className="w-4 h-4" />
-                              <span>
-                                {new Date(review.created_at).toLocaleDateString('he-IL')}
-                              </span>
-                            </div>
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <Link
+                          to={property ? `/property/${property.id}` : '#'}
+                          className="flex items-start gap-2 group mb-3"
+                        >
+                          <LinePin className="text-petrol mt-1 shrink-0" width="18" height="18" />
+                          <span className="font-heading font-bold text-lg text-ink group-hover:text-petrol transition-colors">
+                            {address}
+                          </span>
+                        </Link>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+                          <RatingStars rating={review.overall_rating} size="md" />
+                          <div className="flex items-center gap-1.5 text-sm text-muted">
+                            <LineClock width="14" height="14" />
+                            <span>{new Date(review.created_at).toLocaleDateString('he-IL')}</span>
                           </div>
-                          {review.review_text && (
-                            <p className="text-gray-700 mt-3 line-clamp-3">
-                              {review.review_text}
-                            </p>
-                          )}
                         </div>
-                        <div className="flex-shrink-0">
-                          {review.status === 'approved' && (
-                            <Badge variant="success" className="flex items-center gap-1">
-                              <Icon.Check className="w-3 h-3" />
-                              {t('review.approved')}
-                            </Badge>
-                          )}
-                          {review.status === 'pending' && (
-                            <Badge variant="warning" className="flex items-center gap-1">
-                              <Icon.Clock className="w-3 h-3" />
-                              {t('review.pending')}
-                            </Badge>
-                          )}
-                          {review.status === 'rejected' && (
-                            <Badge variant="danger" className="flex items-center gap-1">
-                              <Icon.XCircle className="w-3 h-3" />
-                              {t('review.rejected')}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-gray-100">
-                        {property && (
-                          <Link
-                            to={`/property/${property.id}`}
-                            className="flex items-center gap-1 text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors"
-                          >
-                            <span>{t('profile.viewProperty')}</span>
-                            <Icon.ArrowRight className="w-4 h-4" />
-                          </Link>
+                        {review.review_text && (
+                          <p className="text-ink/80 leading-relaxed line-clamp-3">{review.review_text}</p>
                         )}
-
-                        {/* Edit/Delete Actions */}
-                        <div className="flex items-center gap-2">
-                          {review.status !== 'rejected' && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/edit-review/${review.id}`)}
-                              className="flex items-center gap-1"
-                            >
-                              <Icon.Edit className="w-4 h-4" />
-                              {t('review.edit')}
-                            </Button>
-                          )}
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDeleteClick(review)}
-                            className="flex items-center gap-1"
-                          >
-                            <Icon.Trash className="w-4 h-4" />
-                            {t('review.delete')}
-                          </Button>
-                        </div>
                       </div>
-                    </CardBody>
-                  </Card>
+                      <div className="shrink-0">
+                        {review.status === 'approved' && (
+                          <Badge variant="success" className="flex items-center gap-1">
+                            <LineCheck width="13" height="13" /> {t('review.approved')}
+                          </Badge>
+                        )}
+                        {review.status === 'pending' && (
+                          <Badge variant="warning" className="flex items-center gap-1">
+                            <LineClock width="13" height="13" /> {t('review.pending')}
+                          </Badge>
+                        )}
+                        {review.status === 'rejected' && (
+                          <Badge variant="danger" className="flex items-center gap-1">
+                            <LineX width="13" height="13" /> {t('review.rejected')}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 mt-4 border-t border-black/5">
+                      {property ? (
+                        <Link
+                          to={`/property/${property.id}`}
+                          className="inline-flex items-center gap-1 text-petrol hover:text-petrol-700 text-sm font-semibold transition-colors"
+                        >
+                          {t('profile.viewProperty')}
+                          <LineArrowLeft width="16" height="16" />
+                        </Link>
+                      ) : <span />}
+
+                      <div className="flex items-center gap-2">
+                        {review.status !== 'rejected' && (
+                          <button
+                            onClick={() => navigate(`/edit-review/${review.id}`)}
+                            className="btn inline-flex items-center gap-1.5 rounded-lg border border-petrol/25 text-petrol px-3.5 py-2 text-sm font-semibold hover:bg-petrol-50"
+                          >
+                            <LineEdit width="15" height="15" /> {t('review.edit')}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteClick(review)}
+                          className="btn inline-flex items-center gap-1.5 rounded-lg border border-red-200 text-red-600 px-3.5 py-2 text-sm font-semibold hover:bg-red-50"
+                        >
+                          <LineX width="15" height="15" /> {t('review.delete')}
+                        </button>
+                      </div>
+                    </div>
+                  </article>
                 )
               })}
             </div>
           ) : (
-            <Card className="shadow-soft">
-              <CardBody className="p-12 text-center">
-                <div className="bg-primary-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Icon.FileText className="w-12 h-12 text-primary-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {t('profile.noReviewsYet')}
-                </h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  {t('profile.startWriting')}
-                </p>
-                <Button onClick={() => navigate('/write-review')} size="lg">
-                  <Icon.Dragon />
-                  {t('profile.writeFirstReview')}
-                </Button>
-              </CardBody>
-            </Card>
+            <div className="mt-6 bg-white rounded-2xl shadow-card border border-black/5 p-12 text-center">
+              <span className="mx-auto grid place-items-center w-16 h-16 rounded-2xl bg-petrol-50 text-petrol mb-5">
+                <LineDoc width="30" height="30" />
+              </span>
+              <h3 className="font-heading font-bold text-2xl text-ink mb-2">{t('profile.noReviewsYet')}</h3>
+              <p className="text-muted max-w-md mx-auto mb-6">{t('profile.startWriting')}</p>
+              <button
+                onClick={() => navigate('/write-review')}
+                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+              >
+                <LineEdit width="18" height="18" /> {t('profile.writeFirstReview')}
+              </button>
+            </div>
           )}
         </div>
-
-        {/* Delete Confirmation Modal */}
-        <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)}>
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <Icon.Alert className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900">{t('profile.deleteModal.title')}</h3>
-            </div>
-
-            <p className="text-gray-600 mb-6">
-              {t('profile.deleteModal.description')}
-            </p>
-
-            {reviewToDelete && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-700 font-medium mb-2">
-                  {reviewToDelete.properties?.street} {reviewToDelete.properties?.building_number}
-                </p>
-                <p className="text-sm text-gray-600 line-clamp-2">
-                  {reviewToDelete.review_text}
-                </p>
-              </div>
-            )}
-
-            <p className="text-sm text-red-600 mb-6 font-medium">
-              {t('profile.deleteModal.warning')}
-            </p>
-
-            <div className="flex gap-3">
-              <Button
-                variant="ghost"
-                onClick={() => setDeleteModalOpen(false)}
-                className="flex-1"
-                disabled={deleting}
-              >
-                {t('form.cancel')}
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="flex-1"
-              >
-                {deleting ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    {t('common.loading')}
-                  </>
-                ) : (
-                  <>
-                    <Icon.Trash />
-                    {t('profile.deleteModal.confirm')}
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </Modal>
       </main>
+
+      {/* Delete confirmation modal */}
+      <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)}>
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="grid place-items-center w-12 h-12 rounded-xl bg-red-100 text-red-600">
+              <LineAlert width="24" height="24" />
+            </span>
+            <h3 className="font-heading font-bold text-xl text-ink">{t('profile.deleteModal.title')}</h3>
+          </div>
+
+          <p className="text-muted mb-5">{t('profile.deleteModal.description')}</p>
+
+          {reviewToDelete && (
+            <div className="bg-canvas rounded-xl p-4 mb-5 border border-black/5">
+              <p className="text-sm text-ink font-semibold mb-1">
+                {reviewToDelete.properties?.street} {reviewToDelete.properties?.building_number}
+              </p>
+              <p className="text-sm text-muted line-clamp-2">{reviewToDelete.review_text}</p>
+            </div>
+          )}
+
+          <p className="text-sm text-red-600 mb-6 font-medium">{t('profile.deleteModal.warning')}</p>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={deleting}
+              className="btn flex-1 rounded-xl border border-black/10 text-ink px-5 py-3 font-semibold hover:bg-canvas disabled:opacity-50"
+            >
+              {t('form.cancel')}
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+              className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 text-white px-5 py-3 font-bold hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleting ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  {t('common.loading')}
+                </>
+              ) : (
+                <>
+                  <LineX width="18" height="18" /> {t('profile.deleteModal.confirm')}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Footer />
     </div>
   )
 }

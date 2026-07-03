@@ -1,61 +1,77 @@
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import Icon from '../components/icons'
-import { Card, CardBody } from '../components/ui/Card'
+import PageHero from '../components/PageHero'
+import { useScrollReveal } from '../hooks/useScrollReveal'
+import { LineChat, LineAlert, LineClock } from '../components/icons/line'
+
+const CONTACT_EMAIL = 'shimon@frame-5.com'
 
 export default function ContactPage() {
+  useScrollReveal([])
+
+  const cards = [
+    {
+      Icon: LineChat,
+      title: 'אימייל',
+      body: (
+        <a
+          href={`mailto:${CONTACT_EMAIL}`}
+          dir="ltr"
+          className="inline-block text-petrol hover:text-petrol-700 font-bold text-lg hover:underline"
+        >
+          {CONTACT_EMAIL}
+        </a>
+      ),
+    },
+    {
+      Icon: LineAlert,
+      title: 'דיווח על ביקורת בעייתית',
+      body: (
+        <p className="text-muted leading-relaxed">
+          ניתן לדווח ישירות מעמוד הביקורת באמצעות כפתור "דווח". צוות המודרציה שלנו יבחן כל דיווח.
+        </p>
+      ),
+    },
+    {
+      Icon: LineClock,
+      title: 'זמני תגובה',
+      body: (
+        <p className="text-muted leading-relaxed">
+          אנו משתדלים להגיב תוך 48 שעות בימי עבודה.
+        </p>
+      ),
+    },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card className="shadow-soft">
-          <CardBody className="p-8 md:p-12 text-center">
-            <div className="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Icon.Message className="w-10 h-10 text-primary-600" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">צור קשר</h1>
-            <p className="text-gray-600 mb-8 text-lg">
-              יש לך שאלה, הצעה, או בעיה? נשמח לשמוע ממך!
-            </p>
 
-            <div className="space-y-4 text-right" dir="rtl">
-              <div className="bg-gray-50 rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Icon.Message className="w-5 h-5 text-primary-500" />
-                  <h3 className="font-bold text-gray-900">אימייל</h3>
-                </div>
-                <a
-                  href="mailto:shimon@frame-5.com"
-                  className="text-primary-600 hover:text-primary-700 font-medium text-lg"
-                >
-                  shimon@frame-5.com
-                </a>
-              </div>
+      <PageHero
+        icon={LineChat}
+        title="צור קשר"
+        subtitle="יש לך שאלה, הצעה, או בעיה? נשמח לשמוע ממך."
+      />
 
-              <div className="bg-gray-50 rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Icon.Flag className="w-5 h-5 text-primary-500" />
-                  <h3 className="font-bold text-gray-900">דיווח על ביקורת בעייתית</h3>
-                </div>
-                <p className="text-gray-600">
-                  ניתן לדווח ישירות מעמוד הביקורת באמצעות כפתור "דווח".
-                  צוות המודרציה שלנו יבחן כל דיווח.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <Icon.Clock className="w-5 h-5 text-primary-500" />
-                  <h3 className="font-bold text-gray-900">זמני תגובה</h3>
-                </div>
-                <p className="text-gray-600">
-                  אנו משתדלים להגיב תוך 48 שעות בימי עבודה.
-                </p>
+      <main id="main-content" className="flex-1">
+        <div className="max-w-2xl mx-auto px-5 lg:px-8 -mt-8 lg:-mt-12 pb-20 space-y-5">
+          {cards.map(({ Icon, title, body }) => (
+            <div
+              key={title}
+              className="reveal lift bg-white rounded-2xl shadow-card border border-black/5 p-6 flex gap-4"
+            >
+              <span className="grid place-items-center shrink-0 w-12 h-12 rounded-xl bg-petrol-50 text-petrol">
+                <Icon width="24" height="24" />
+              </span>
+              <div>
+                <h3 className="font-heading font-bold text-ink mb-1.5">{title}</h3>
+                {body}
               </div>
             </div>
-          </CardBody>
-        </Card>
+          ))}
+        </div>
       </main>
+
       <Footer />
     </div>
   )

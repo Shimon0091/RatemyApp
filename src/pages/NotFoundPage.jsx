@@ -1,39 +1,41 @@
 import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import Icon from '../components/icons'
-import { Button } from '../components/ui/Button'
-import { Card, CardBody } from '../components/ui/Card'
+import { LineSearch, LineArrowLeft, LineBuilding } from '../components/icons/line'
 
 export default function NotFoundPage() {
-  const { t } = useTranslation()
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
       <Header />
-      <main className="container mx-auto px-4 py-16 max-w-2xl">
-        <Card className="shadow-soft">
-          <CardBody className="text-center py-16">
-            <div className="bg-primary-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Icon.Search className="w-12 h-12 text-primary-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
-              העמוד לא נמצא
-            </h2>
-            <p className="text-gray-600 mb-8">
-              הדף שחיפשת לא קיים או שהועבר למקום אחר.
-            </p>
-            <Link to="/">
-              <Button size="lg">
-                <Icon.Home />
-                חזרה לדף הבית
-              </Button>
+
+      <main id="main-content" className="flex-1 grid place-items-center px-5 py-16 lg:py-24">
+        <div className="w-full max-w-md text-center">
+          <span className="mx-auto grid place-items-center w-20 h-20 rounded-3xl bg-petrol text-white shadow-lift">
+            <LineBuilding width="38" height="38" />
+          </span>
+          <p className="mt-8 font-heading font-black text-6xl text-petrol">404</p>
+          <h1 className="mt-2 font-heading font-bold text-2xl text-ink">העמוד לא נמצא</h1>
+          <p className="mt-3 text-muted leading-relaxed">
+            הדף שחיפשת לא קיים או שהועבר למקום אחר.
+          </p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/"
+              className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+            >
+              חזרה לדף הבית
+              <LineArrowLeft width="18" height="18" />
             </Link>
-          </CardBody>
-        </Card>
+            <Link
+              to="/search"
+              className="btn inline-flex items-center justify-center gap-2 rounded-xl border border-petrol/25 text-petrol px-6 py-3 font-semibold hover:bg-petrol-50"
+            >
+              <LineSearch width="18" height="18" /> חיפוש דירות
+            </Link>
+          </div>
+        </div>
       </main>
+
       <Footer />
     </div>
   )

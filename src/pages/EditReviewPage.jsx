@@ -3,14 +3,45 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
+import Footer from '../components/Footer'
 import { getReviewById, updateReview } from '../lib/database'
 import { logger } from '../utils/logger'
-import Icon from '../components/icons'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Card, CardBody, CardHeader } from '../components/ui/Card'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import RatingInput from '../components/RatingInput'
+import {
+  LineEdit, LineAlert, LineCheck, LinePin,
+} from '../components/icons/line'
+
+function YesNo({ label, value, onChange }) {
+  return (
+    <div className="flex items-center justify-between gap-4 p-4 bg-canvas rounded-xl border border-black/5">
+      <span className="text-ink font-medium">{label}</span>
+      <div className="flex gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`btn px-4 py-2 rounded-lg font-semibold text-sm ${
+            value === true
+              ? 'bg-petrol text-white shadow-lift'
+              : 'bg-white text-ink border border-black/10 hover:border-petrol/40'
+          }`}
+        >
+          כן
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`btn px-4 py-2 rounded-lg font-semibold text-sm ${
+            value === false
+              ? 'bg-red-500 text-white shadow-lift'
+              : 'bg-white text-ink border border-black/10 hover:border-red-300'
+          }`}
+        >
+          לא
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function EditReviewPage() {
   const { t } = useTranslation()
@@ -63,7 +94,6 @@ export default function EditReviewPage() {
         return
       }
 
-      // Check if review is editable (only pending and approved reviews can be edited)
       if (reviewToEdit.status === 'rejected') {
         setError(t('editReview.cannotEditRejected'))
         return
@@ -71,14 +101,12 @@ export default function EditReviewPage() {
 
       setReview(reviewToEdit)
 
-      // Populate form with existing data
       setReviewText(reviewToEdit.review_text || '')
       setOverallRating(reviewToEdit.overall_rating || 0)
       setMaintenanceRating(reviewToEdit.maintenance_rating || 0)
       setCommunicationRating(reviewToEdit.communication_rating || 0)
       setValueRating(reviewToEdit.value_rating || 0)
 
-      // Populate tags
       if (reviewToEdit.tags) {
         setDepositReturned(reviewToEdit.tags.depositReturned ?? null)
         setContractRespected(reviewToEdit.tags.contractRespected ?? null)
@@ -102,7 +130,6 @@ export default function EditReviewPage() {
     setError('')
 
     try {
-      // Validation
       if (!reviewText.trim()) {
         setError(t('editReview.reviewTextRequired'))
         setSubmitting(false)
@@ -147,34 +174,45 @@ export default function EditReviewPage() {
     }
   }
 
+  const inputClass =
+    'w-full rounded-xl bg-canvas border border-black/10 px-4 py-3 text-[15px] text-ink ' +
+    'placeholder:text-muted/70 outline-none transition-colors focus:border-petrol focus:ring-2 focus:ring-petrol/20 resize-none'
+
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      <div className="bg-canvas text-ink font-body min-h-screen flex flex-col">
         <Header />
-        <div className="container mx-auto px-4 py-16 text-center">
-          <LoadingSpinner size="xl" />
-          <div className="text-xl text-gray-600 mt-4">{t('common.loading')}</div>
+        <div className="flex-1 grid place-items-center px-5 py-24 text-center">
+          <div>
+            <span className="mx-auto block w-10 h-10 rounded-full border-4 border-petrol/20 border-t-petrol animate-spin" />
+            <p className="mt-4 text-muted">{t('common.loading')}</p>
+          </div>
         </div>
+        <Footer />
       </div>
     )
   }
 
   if (!user || !review) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+      <div className="bg-canvas text-ink font-body min-h-screen flex flex-col">
         <Header />
-        <div className="container mx-auto px-4 py-16 text-center">
-          <Card className="max-w-md mx-auto shadow-medium">
-            <CardBody className="p-8">
-              <Icon.Alert className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('common.error')}</h2>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <Button onClick={() => navigate('/profile')}>
-                {t('common.backToHome')}
-              </Button>
-            </CardBody>
-          </Card>
+        <div className="flex-1 grid place-items-center px-5 py-24">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-card border border-black/5 p-8 text-center">
+            <span className="mx-auto grid place-items-center w-16 h-16 rounded-2xl bg-red-100 text-red-600 mb-5">
+              <LineAlert width="30" height="30" />
+            </span>
+            <h2 className="font-heading font-bold text-2xl text-ink mb-2">{t('common.error')}</h2>
+            <p className="text-muted mb-6">{error}</p>
+            <button
+              onClick={() => navigate('/profile')}
+              className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-petrol text-white px-6 py-3 font-bold hover:bg-petrol-700"
+            >
+              {t('common.backToHome')}
+            </button>
+          </div>
         </div>
+        <Footer />
       </div>
     )
   }
@@ -182,352 +220,141 @@ export default function EditReviewPage() {
   const property = review.properties
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <Card className="mb-8 shadow-soft">
-          <CardHeader className="p-6 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <Icon.Edit className="w-8 h-8 text-primary-600" />
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{t('editReview.title')}</h1>
-                {property && (
-                  <p className="text-gray-600 mt-1">
-                    {property.street} {property.building_number}, {property.city}
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Notice */}
-        <Card className="mb-8 shadow-soft bg-yellow-50 border-2 border-yellow-200">
-          <CardBody className="p-6">
-            <div className="flex items-start gap-3">
-              <Icon.Alert className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-bold text-yellow-900 mb-1">{t('editReview.notice.title')}</h3>
-                <p className="text-sm text-yellow-800">{t('editReview.notice.description')}</p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Error */}
-        {error && (
-          <Card className="mb-8 shadow-soft bg-red-50 border-2 border-red-200">
-            <CardBody className="p-6">
-              <div className="flex items-center gap-3">
-                <Icon.Alert className="w-6 h-6 text-red-600" />
-                <p className="text-red-700 font-medium">{error}</p>
-              </div>
-            </CardBody>
-          </Card>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <Card className="mb-8 shadow-medium">
-            <CardBody className="p-8">
-              {/* Review Text */}
-              <div className="mb-8">
-                <label className="block text-lg font-bold text-gray-900 mb-4">
-                  {t('writeReview.step2.reviewText')} *
-                </label>
-                <textarea
-                  value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors resize-none"
-                  rows={6}
-                  placeholder={t('writeReview.step2.reviewPlaceholder')}
-                  required
-                />
-              </div>
-
-              {/* Ratings */}
-              <div className="mb-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  {t('writeReview.step2.ratings')} *
-                </h3>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('rating.overall')} *
-                    </label>
-                    <RatingInput value={overallRating} onChange={setOverallRating} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('rating.maintenance')} *
-                    </label>
-                    <RatingInput value={maintenanceRating} onChange={setMaintenanceRating} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('rating.communication')} *
-                    </label>
-                    <RatingInput value={communicationRating} onChange={setCommunicationRating} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      {t('rating.value')} *
-                    </label>
-                    <RatingInput value={valueRating} onChange={setValueRating} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  {t('writeReview.step2.specificQuestions')}
-                </h3>
-                <div className="space-y-4">
-                  {/* Deposit Returned */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <span className="text-gray-700">{t('writeReview.step2.depositReturned')}</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setDepositReturned(true)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          depositReturned === true
-                            ? 'bg-accent-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDepositReturned(false)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          depositReturned === false
-                            ? 'bg-red-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Contract Respected */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <span className="text-gray-700">{t('writeReview.step2.contractRespected')}</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setContractRespected(true)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          contractRespected === true
-                            ? 'bg-accent-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setContractRespected(false)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          contractRespected === false
-                            ? 'bg-red-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Maintenance Timely */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <span className="text-gray-700">{t('writeReview.step2.maintenanceTimely')}</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setMaintenanceTimely(true)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          maintenanceTimely === true
-                            ? 'bg-accent-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMaintenanceTimely(false)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          maintenanceTimely === false
-                            ? 'bg-red-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Responsive */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <span className="text-gray-700">{t('writeReview.step2.responsive')}</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setResponsive(true)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          responsive === true
-                            ? 'bg-accent-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setResponsive(false)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          responsive === false
-                            ? 'bg-red-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Neighborhood Tags */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <h4 className="text-md font-bold text-gray-900 mb-3">על השכונה</h4>
-                  </div>
-
-                  {/* Parking Available */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <span className="text-gray-700">{t('tags.parkingAvailable')}</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setParkingAvailable(true)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          parkingAvailable === true
-                            ? 'bg-accent-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setParkingAvailable(false)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          parkingAvailable === false
-                            ? 'bg-red-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Nice Neighbors */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <span className="text-gray-700">{t('tags.niceNeighbors')}</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setNiceNeighbors(true)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          niceNeighbors === true
-                            ? 'bg-accent-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNiceNeighbors(false)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          niceNeighbors === false
-                            ? 'bg-red-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Nearby Amenities */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <span className="text-gray-700">{t('tags.nearbyAmenities')}</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setNearbyAmenities(true)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          nearbyAmenities === true
-                            ? 'bg-accent-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNearbyAmenities(false)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                          nearbyAmenities === false
-                            ? 'bg-red-500 text-white shadow-medium'
-                            : 'bg-white text-gray-700 border border-gray-300'
-                        }`}
-                      >
-                        {t('common.no')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          {/* Actions */}
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => navigate('/profile')}
-              className="flex-1"
-            >
-              {t('form.cancel')}
-            </Button>
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="flex-1"
-            >
-              {submitting ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  {t('form.submitting')}
-                </>
-              ) : (
-                <>
-                  <Icon.Check />
-                  {t('editReview.save')}
-                </>
+      {/* Hero */}
+      <section className="bg-petrol text-white">
+        <div className="max-w-3xl mx-auto px-5 lg:px-8 py-12 lg:py-16">
+          <div className="flex items-center gap-4">
+            <span className="grid place-items-center w-14 h-14 rounded-2xl bg-white/10 shadow-lift shrink-0">
+              <LineEdit width="26" height="26" />
+            </span>
+            <div>
+              <h1 className="font-heading font-black text-3xl lg:text-4xl">{t('editReview.title')}</h1>
+              {property && (
+                <p className="mt-1.5 text-white/80 flex items-center gap-2">
+                  <LinePin width="16" height="16" />
+                  {property.street} {property.building_number}, {property.city}
+                </p>
               )}
-            </Button>
+            </div>
           </div>
-        </form>
+        </div>
+      </section>
+
+      <main id="main-content" className="flex-1">
+        <div className="max-w-3xl mx-auto px-5 lg:px-8 -mt-8 lg:-mt-10 pb-20 space-y-5">
+          {/* Notice */}
+          <div className="rounded-2xl bg-amber-100 border border-amber/20 p-5 flex items-start gap-3">
+            <LineAlert className="text-amber-600 shrink-0 mt-0.5" width="20" height="20" />
+            <div>
+              <h3 className="font-heading font-bold text-ink mb-0.5">{t('editReview.notice.title')}</h3>
+              <p className="text-sm text-ink/80">{t('editReview.notice.description')}</p>
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="rounded-2xl bg-red-50 border border-red-200 p-4 flex items-center gap-3">
+              <LineAlert className="text-red-600 shrink-0" width="20" height="20" />
+              <p className="text-red-700 font-medium">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Review text */}
+            <div className="bg-white rounded-2xl shadow-card border border-black/5 p-6 lg:p-8">
+              <label className="block font-heading font-bold text-lg text-ink mb-4">
+                {t('writeReview.step2.reviewText')} *
+              </label>
+              <textarea
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                className={inputClass}
+                rows={6}
+                placeholder={t('writeReview.step2.reviewPlaceholder')}
+                required
+              />
+            </div>
+
+            {/* Ratings */}
+            <div className="bg-white rounded-2xl shadow-card border border-black/5 p-6 lg:p-8">
+              <h3 className="font-heading font-bold text-lg text-ink mb-5">
+                {t('writeReview.step2.ratings')} *
+              </h3>
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-ink mb-2">{t('rating.overall')} *</label>
+                  <RatingInput value={overallRating} onChange={setOverallRating} />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-ink mb-2">{t('rating.maintenance')} *</label>
+                  <RatingInput value={maintenanceRating} onChange={setMaintenanceRating} />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-ink mb-2">{t('rating.communication')} *</label>
+                  <RatingInput value={communicationRating} onChange={setCommunicationRating} />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-ink mb-2">{t('rating.value')} *</label>
+                  <RatingInput value={valueRating} onChange={setValueRating} />
+                </div>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div className="bg-white rounded-2xl shadow-card border border-black/5 p-6 lg:p-8">
+              <h3 className="font-heading font-bold text-lg text-ink mb-5">
+                {t('writeReview.step2.specificQuestions')}
+              </h3>
+              <div className="space-y-3">
+                <YesNo label={t('writeReview.step2.depositReturned')} value={depositReturned} onChange={setDepositReturned} />
+                <YesNo label={t('writeReview.step2.contractRespected')} value={contractRespected} onChange={setContractRespected} />
+                <YesNo label={t('writeReview.step2.maintenanceTimely')} value={maintenanceTimely} onChange={setMaintenanceTimely} />
+                <YesNo label={t('writeReview.step2.responsive')} value={responsive} onChange={setResponsive} />
+
+                <div className="pt-3">
+                  <h4 className="font-heading font-bold text-ink mb-3">על השכונה</h4>
+                </div>
+
+                <YesNo label={t('tags.parkingAvailable')} value={parkingAvailable} onChange={setParkingAvailable} />
+                <YesNo label={t('tags.niceNeighbors')} value={niceNeighbors} onChange={setNiceNeighbors} />
+                <YesNo label={t('tags.nearbyAmenities')} value={nearbyAmenities} onChange={setNearbyAmenities} />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/profile')}
+                className="btn flex-1 rounded-xl border border-black/10 text-ink px-5 py-3 font-semibold hover:bg-canvas"
+              >
+                {t('form.cancel')}
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-5 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 disabled:opacity-50 disabled:shadow-none"
+              >
+                {submitting ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    {t('form.submitting')}
+                  </>
+                ) : (
+                  <>
+                    <LineCheck width="18" height="18" /> {t('editReview.save')}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </main>
+
+      <Footer />
     </div>
   )
 }
