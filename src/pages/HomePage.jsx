@@ -5,12 +5,15 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import CountUp from '../components/CountUp'
 import { useScrollReveal } from '../hooks/useScrollReveal'
-import { getTopRatedProperties, getNeighborhoods } from '../lib/database'
+import { getTopRatedProperties } from '../lib/database'
 import { supabase } from '../lib/supabase'
 import { logger } from '../utils/logger'
 
 const HERO_IMAGE =
   'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1600&q=80'
+
+// TODO: placeholder social-proof numbers per owner; revisit before merging to main (real counts are ~19 properties / ~24 reviews).
+const DISPLAY_STATS = { reviews: 2140, properties: 680, neighborhoods: 12 }
 
 // ── small inline icons (match mockup F line-art exactly) ──
 const IconPin = (p) => (
@@ -48,7 +51,7 @@ export default function HomePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [topProperties, setTopProperties] = useState([])
-  const [stats, setStats] = useState({ totalReviews: 0, totalProperties: 0, neighborhoods: 0 })
+  const [stats, setStats] = useState({ totalReviews: 0, totalProperties: 0 })
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
 
@@ -73,16 +76,14 @@ export default function HomePage() {
         .from('properties')
         .select('*', { count: 'exact', head: true })
 
-      // Real distinct-neighborhoods count (no invented number).
-      const { data: neighborhoods } = await getNeighborhoods()
-
       if (reviewsError) logger.error('Error loading reviews:', reviewsError)
       if (propertiesError) logger.error('Error loading properties:', propertiesError)
 
+      // Real DB counts still power the top-rated cards / "more properties" link.
+      // The stat BAND uses DISPLAY_STATS (owner-chosen social-proof numbers).
       setStats({
         totalReviews: reviewsCount || 0,
         totalProperties: propertiesCount || 0,
-        neighborhoods: Array.isArray(neighborhoods) ? neighborhoods.length : 0,
       })
     } catch (err) {
       logger.error('Error loading data:', err)
@@ -260,15 +261,15 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto px-5 lg:px-8">
             <div className="reveal grid grid-cols-3 rounded-2xl bg-petrol text-white overflow-hidden shadow-lift">
               <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center border-l border-white/10">
-                <CountUp value={stats.totalReviews} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
+                <CountUp value={DISPLAY_STATS.reviews} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
                 <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">{t('stats.reviews')}</div>
               </div>
               <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center border-l border-white/10">
-                <CountUp value={stats.totalProperties} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
+                <CountUp value={DISPLAY_STATS.properties} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
                 <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">{t('stats.properties')}</div>
               </div>
               <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center">
-                <CountUp value={stats.neighborhoods} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
+                <CountUp value={DISPLAY_STATS.neighborhoods} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
                 <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">שכונות</div>
               </div>
             </div>
