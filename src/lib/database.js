@@ -22,9 +22,11 @@ export async function getOrCreateProperty(addressData) {
       { onConflict: 'street,building_number,floor,apartment,city', ignoreDuplicates: true }
     )
     .select()
-    .single()
+    .maybeSingle()
 
-  // If upsert with ignoreDuplicates returns nothing, fetch the existing record
+  // If upsert with ignoreDuplicates returns nothing (existing address), fetch the existing record.
+  // NOTE: must be maybeSingle() above — .single() errors (PGRST116) on the 0-row DO NOTHING result,
+  // which previously skipped this fallback and broke review submission for existing addresses.
   if (!data && !error) {
     const { data: existing, error: fetchError } = await supabase
       .from('properties')
