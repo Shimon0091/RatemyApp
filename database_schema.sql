@@ -1,4 +1,9 @@
--- 🐉 Dirgon Database Schema
+-- ⚠️⚠️ אזהרה: קובץ זה מיושן ולא בטוח להרצה על ה-DB החי! ⚠️⚠️
+-- המצב החי כולל תיקוני אבטחה שאינם כאן (ראה migration_fix_rls_hardening.sql).
+-- הרצה חוזרת של הקובץ הזה תחזיר פרצות שכבר תוקנו (self-approve, זיוף דירוגים).
+-- לשינויים: כתוב migration ממוספר חדש ואדיטיבי בלבד — לעולם לא schema dump על החי.
+--
+-- 🐉 Dirgon Database Schema  (היסטורי — setup ראשוני בלבד)
 -- הרץ את הקובץ הזה ב-Supabase SQL Editor
 
 -- Enable UUID extension
