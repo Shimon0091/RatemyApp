@@ -6,7 +6,13 @@ import { supabase } from './supabase'
 
 // Get or create property (uses upsert to avoid race conditions)
 export async function getOrCreateProperty(addressData) {
-  const { street, buildingNumber, floor, apartment, city } = addressData
+  const { street, buildingNumber, city } = addressData
+  // floor/apartment are optional in the form (and not filled by Google Places autocomplete),
+  // but the DB columns are NOT NULL and part of the unique key. Coalesce blank to '' —
+  // sending null violates NOT NULL (HTTP 400 / 23502) and would also break dedup
+  // (NULL <> NULL in the unique constraint).
+  const floor = addressData.floor || ''
+  const apartment = addressData.apartment || ''
 
   // Use upsert to handle concurrent submissions safely
   const { data, error } = await supabase
