@@ -3,17 +3,55 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { createReview } from '../lib/database';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import RatingInput from '../components/RatingInput';
 import { logger } from '../utils/logger';
-import Icon from '../components/icons';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Card } from '../components/ui/Card';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { Badge } from '../components/ui/Badge';
+import {
+  LinePin, LineBuilding, LineStarSolid, LineDoc, LineCheck, LineX,
+  LineArrowLeft, LineArrowRight, LineAlert, LineSearch, LineLock, LineClock,
+  LineHeart, LineBadgeCheck,
+} from '../components/icons/line';
 
 // Google Places API Key from environment
 const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
+
+const inputClass =
+  'w-full rounded-xl bg-canvas border border-black/10 px-4 py-3 text-[15px] text-ink ' +
+  'placeholder:text-muted/70 outline-none transition-colors focus:border-petrol focus:ring-2 focus:ring-petrol/20';
+
+// DRY yes / no toggle used across step 3.
+function YesNo({ label, value, onChange }) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-ink mb-3">{label}</label>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`btn flex-1 px-4 py-3 rounded-xl border flex items-center justify-center gap-2 font-semibold transition-all ${
+            value === true
+              ? 'border-petrol bg-petrol-50 text-petrol'
+              : 'border-black/10 text-muted hover:border-petrol/40 hover:bg-canvas'
+          }`}
+        >
+          <LineCheck width="18" height="18" /> כן
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`btn flex-1 px-4 py-3 rounded-xl border flex items-center justify-center gap-2 font-semibold transition-all ${
+            value === false
+              ? 'border-red-400 bg-red-50 text-red-600'
+              : 'border-black/10 text-muted hover:border-red-300 hover:bg-canvas'
+          }`}
+        >
+          <LineX width="18" height="18" /> לא
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function WriteReviewPage() {
   const { t } = useTranslation();
@@ -196,31 +234,28 @@ export default function WriteReviewPage() {
 
   const handleStep1Submit = (e) => {
     e.preventDefault();
-
     if (!street || !buildingNumber || !city) {
       setError('יש למלא רחוב, מספר בניין ועיר');
       return;
     }
-
     setError('');
     setStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleStep2Submit = (e) => {
     e.preventDefault();
-
     if (overallRating === 0) {
       setError('יש לתת דירוג כללי');
       return;
     }
-
     if (!maintenanceQuality || !landlordCommunication || !contractCompliance || !timelyRepairs || !valueRating) {
       setError('יש למלא את כל הדירוגים');
       return;
     }
-
     setError('');
     setStep(3);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleFinalSubmit = async (e) => {
@@ -241,24 +276,12 @@ export default function WriteReviewPage() {
 
     try {
       const tags = {};
-      if (depositReturned !== null) {
-        tags.depositReturned = depositReturned;
-      }
-      if (contractRespected !== null) {
-        tags.contractRespected = contractRespected;
-      }
-      if (repairsTimely !== null) {
-        tags.maintenanceTimely = repairsTimely;
-      }
-      if (parkingAvailable !== null) {
-        tags.parkingAvailable = parkingAvailable;
-      }
-      if (niceNeighbors !== null) {
-        tags.niceNeighbors = niceNeighbors;
-      }
-      if (nearbyAmenities !== null) {
-        tags.nearbyAmenities = nearbyAmenities;
-      }
+      if (depositReturned !== null) tags.depositReturned = depositReturned;
+      if (contractRespected !== null) tags.contractRespected = contractRespected;
+      if (repairsTimely !== null) tags.maintenanceTimely = repairsTimely;
+      if (parkingAvailable !== null) tags.parkingAvailable = parkingAvailable;
+      if (niceNeighbors !== null) tags.niceNeighbors = niceNeighbors;
+      if (nearbyAmenities !== null) tags.nearbyAmenities = nearbyAmenities;
 
       const reviewData = {
         addressData: {
@@ -285,10 +308,7 @@ export default function WriteReviewPage() {
       };
 
       const { data, error } = await createReview(reviewData);
-
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       navigate('/');
     } catch (err) {
@@ -299,642 +319,372 @@ export default function WriteReviewPage() {
     }
   };
 
-  // Show loading while checking auth
+  // Loading auth
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center">
-        <LoadingSpinner size="xl" text="בודק הרשאות..." />
+      <div className="bg-canvas text-ink font-body min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-1 grid place-items-center py-24">
+          <div className="text-center">
+            <span className="mx-auto grid place-items-center w-14 h-14 rounded-2xl bg-petrol-50 text-petrol animate-pulse">
+              <LineBadgeCheck width="28" height="28" />
+            </span>
+            <div className="mt-4 text-muted">בודק הרשאות…</div>
+          </div>
+        </div>
+        <Footer />
       </div>
-    )
+    );
   }
 
-  // Redirect to login if not authenticated
+  // Gate: not authenticated
   if (!user) {
+    const perks = [
+      { Icon: LineLock, title: 'אנונימי לחלוטין', body: 'השם שלך לא יופיע בביקורת' },
+      { Icon: LineClock, title: 'לוקח פחות מ-5 דקות', body: 'טופס קצר עם 3 שלבים פשוטים' },
+      { Icon: LineHeart, title: 'תרומה לקהילה', body: 'עוזרים לשוכרים אחרים להימנע מהפתעות' },
+    ];
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center px-4">
-        <Card className="p-8 max-w-lg w-full text-center">
-          <Icon.Dragon className="text-primary-500 mx-auto mb-4" style={{ width: '64px', height: '64px' }} />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            שתפו את החוויה שלכם
-          </h2>
-          <p className="text-gray-600 mb-6">
-            הביקורת שלכם עוזרת לשוכרים אחרים לקבל החלטות מושכלות
-          </p>
+      <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
+        <Header />
+        <main id="main-content" className="flex-1 grid place-items-center px-5 py-14 lg:py-20">
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-card border border-black/5 p-8 text-center">
+            <span className="mx-auto grid place-items-center w-16 h-16 rounded-2xl bg-petrol text-white shadow-lift">
+              <LineDoc width="30" height="30" />
+            </span>
+            <h1 className="mt-5 font-heading font-black text-2xl text-ink">שתפו את החוויה שלכם</h1>
+            <p className="mt-2 text-muted">הביקורת שלכם עוזרת לשוכרים אחרים לקבל החלטות מושכלות</p>
 
-          <div className="text-right space-y-3 mb-8 bg-gray-50 rounded-xl p-5">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary-100 p-2 rounded-lg flex-shrink-0">
-                <Icon.Lock className="w-5 h-5 text-primary-600" />
-              </div>
-              <div>
-                <div className="font-medium text-gray-900 text-sm">אנונימי לחלוטין</div>
-                <div className="text-xs text-gray-500">השם שלך לא יופיע בביקורת</div>
-              </div>
+            <div className="mt-7 text-right space-y-3">
+              {perks.map(({ Icon, title, body }) => (
+                <div key={title} className="flex items-center gap-3 rounded-xl bg-canvas border border-black/5 p-4">
+                  <span className="grid place-items-center w-10 h-10 rounded-xl bg-petrol-50 text-petrol shrink-0">
+                    <Icon width="20" height="20" />
+                  </span>
+                  <div>
+                    <div className="font-semibold text-ink text-sm">{title}</div>
+                    <div className="text-xs text-muted">{body}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-accent-100 p-2 rounded-lg flex-shrink-0">
-                <Icon.Clock className="w-5 h-5 text-accent-600" />
-              </div>
-              <div>
-                <div className="font-medium text-gray-900 text-sm">לוקח פחות מ-5 דקות</div>
-                <div className="text-xs text-gray-500">טופס קצר עם 3 שלבים פשוטים</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="bg-secondary-100 p-2 rounded-lg flex-shrink-0">
-                <Icon.Heart className="w-5 h-5 text-secondary-600" />
-              </div>
-              <div>
-                <div className="font-medium text-gray-900 text-sm">תרומה לקהילה</div>
-                <div className="text-xs text-gray-500">עוזרים לשוכרים אחרים להימנע מהפתעות</div>
-              </div>
-            </div>
+
+            <button
+              onClick={() => navigate('/login', { state: { from: '/write-review' } })}
+              className="btn w-full mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+            >
+              התחברו כדי לכתוב ביקורת
+            </button>
+            <p className="text-xs text-muted mt-3">ההתחברות נדרשת רק למניעת ספאם</p>
           </div>
-
-          <Button
-            onClick={() => navigate('/login', { state: { from: '/write-review' } })}
-            className="w-full"
-            size="lg"
-          >
-            התחברו כדי לכתוב ביקורת
-          </Button>
-          <p className="text-xs text-gray-400 mt-3">ההתחברות נדרשת רק למניעת ספאם</p>
-        </Card>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   const steps = [
-    { number: 1, title: 'פרטי הדירה', icon: Icon.Building },
-    { number: 2, title: 'דירוגים', icon: Icon.Star },
-    { number: 3, title: 'פרטים נוספים', icon: Icon.FileText },
+    { number: 1, title: 'פרטי הדירה', Icon: LineBuilding },
+    { number: 2, title: 'דירוגים', Icon: LineStarSolid },
+    { number: 3, title: 'פרטים נוספים', Icon: LineDoc },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        {/* Visual Stepper */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            {steps.map((s, index) => {
-              const StepIcon = s.icon;
-              const isActive = step === s.number;
-              const isCompleted = step > s.number;
+    <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
+      <Header />
 
-              return (
-                <div key={s.number} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all ${
-                        isCompleted
-                          ? 'bg-accent-500 text-white'
-                          : isActive
-                          ? 'bg-primary-500 text-white shadow-medium'
-                          : 'bg-gray-200 text-gray-500'
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <Icon.Check className="w-6 h-6" />
-                      ) : (
-                        <StepIcon className="w-6 h-6" />
-                      )}
+      <main id="main-content" className="flex-1 w-full">
+        <div className="max-w-3xl mx-auto px-5 lg:px-8 py-10 lg:py-12">
+          {/* Stepper */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              {steps.map((s, index) => {
+                const isActive = step === s.number;
+                const isCompleted = step > s.number;
+                return (
+                  <div key={s.number} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center flex-1">
+                      <div
+                        className={`w-12 h-12 rounded-2xl grid place-items-center mb-2 transition-all ${
+                          isCompleted
+                            ? 'bg-petrol text-white'
+                            : isActive
+                            ? 'bg-amber-cta text-white shadow-lift'
+                            : 'bg-white border border-black/10 text-muted'
+                        }`}
+                      >
+                        {isCompleted ? <LineCheck width="22" height="22" /> : <s.Icon width="22" height="22" />}
+                      </div>
+                      <span className={`text-sm font-semibold ${isActive ? 'text-ink' : 'text-muted'}`}>
+                        {s.title}
+                      </span>
                     </div>
-                    <span
-                      className={`text-sm font-medium ${
-                        isActive ? 'text-primary-600' : 'text-gray-500'
-                      }`}
-                    >
-                      {s.title}
-                    </span>
+                    {index < steps.length - 1 && (
+                      <div className={`h-1 flex-1 mx-2 rounded-full transition-all ${step > s.number ? 'bg-petrol' : 'bg-black/10'}`} />
+                    )}
                   </div>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`h-1 flex-1 mx-2 rounded transition-all ${
-                        step > s.number ? 'bg-accent-500' : 'bg-gray-200'
-                      }`}
-                    />
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+
+            <div className="w-full bg-black/10 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-amber h-2 rounded-full transition-all duration-500"
+                style={{ width: `${(step / 3) * 100}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-2">
+              <span className="text-sm font-medium text-muted">שלב {step} מתוך 3</span>
+              <span className="text-sm font-bold text-petrol">{Math.round((step / 3) * 100)}%</span>
+            </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(step / 3) * 100}%` }}
-            />
-          </div>
-          <div className="flex justify-between mt-2">
-            <span className="text-sm font-medium text-gray-600">שלב {step} מתוך 3</span>
-            <span className="text-sm font-medium text-primary-600">{Math.round((step / 3) * 100)}%</span>
+          <div className="bg-white rounded-2xl shadow-card border border-black/5 p-6 sm:p-8 animate-scale-in">
+            {/* Step 1 */}
+            {step === 1 && (
+              <form onSubmit={handleStep1Submit}>
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="grid place-items-center w-11 h-11 rounded-xl bg-petrol-50 text-petrol">
+                    <LineBuilding width="22" height="22" />
+                  </span>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-ink">פרטי הדירה</h2>
+                </div>
+
+                <div className="space-y-5">
+                  <div className="relative" ref={autocompleteRef}>
+                    <label className="block text-sm font-semibold text-ink mb-2">{t('property.street')} <span className="text-red-500">*</span></label>
+                    <input
+                      value={street}
+                      onChange={(e) => { setStreet(e.target.value); setShowSuggestions(true); }}
+                      onFocus={() => setShowSuggestions(true)}
+                      placeholder="התחילו להקליד כתובת…"
+                      required
+                      className={inputClass}
+                    />
+
+                    {isLoadingPlaces && (
+                      <div className="absolute left-3 top-[42px]">
+                        <span className="block w-4 h-4 rounded-full border-2 border-petrol/30 border-t-petrol animate-spin" />
+                      </div>
+                    )}
+
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute z-20 w-full mt-1 bg-white border border-black/10 rounded-xl shadow-card max-h-60 overflow-y-auto animate-slide-down">
+                        {suggestions.map((suggestion, index) => {
+                          const prediction = suggestion.placePrediction;
+                          const text = prediction?.text?.text || '';
+                          const mainText = prediction?.mainText?.text || text;
+                          const secondaryText = prediction?.secondaryText?.text || '';
+                          return (
+                            <button
+                              key={prediction?.placeId || index}
+                              type="button"
+                              onClick={() => handleSelectPlace(prediction?.placeId, text)}
+                              className="w-full px-4 py-3 text-right hover:bg-petrol-50 transition-colors border-b border-black/5 last:border-b-0"
+                            >
+                              <div className="flex items-start gap-2">
+                                <LinePin className="text-petrol shrink-0 mt-0.5" width="16" height="16" />
+                                <div className="flex-1">
+                                  <div className="font-semibold text-ink">{mainText}</div>
+                                  {secondaryText && <div className="text-sm text-muted">{secondaryText}</div>}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {(!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) ? (
+                      <div className="mt-2 p-3 rounded-xl bg-amber-100 border border-amber/20 flex items-start gap-2">
+                        <LineAlert className="text-amber-600 shrink-0 mt-0.5" width="16" height="16" />
+                        <div className="text-sm text-amber-600">
+                          <p className="font-semibold">השלמה אוטומטית של כתובות אינה זמינה</p>
+                          <p className="text-xs mt-0.5">יש להזין את הכתובת ידנית</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted flex items-center gap-2">
+                        <LineSearch width="15" height="15" /> התחילו להקליד והמערכת תציע כתובות
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-ink mb-2">{t('property.building')} <span className="text-red-500">*</span></label>
+                    <input value={buildingNumber} onChange={(e) => setBuildingNumber(e.target.value)} placeholder="למשל: 123" required className={inputClass} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-ink mb-2">{t('property.floor')}</label>
+                      <input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="למשל: 3" className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-ink mb-2">{t('property.apartment')}</label>
+                      <input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder="למשל: 12" className={inputClass} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-ink mb-2">{t('property.city')} <span className="text-red-500">*</span></label>
+                    <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="למשל: תל אביב" required className={inputClass} />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2">
+                    <LineAlert className="text-red-600 shrink-0 mt-0.5" width="18" height="18" />
+                    <p className="text-red-700 text-sm font-medium">{error}</p>
+                  </div>
+                )}
+
+                <button type="submit" className="btn w-full mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-petrol text-white px-6 py-3.5 font-bold hover:bg-petrol-700">
+                  המשך לדירוגים
+                  <LineArrowLeft width="18" height="18" />
+                </button>
+              </form>
+            )}
+
+            {/* Step 2 */}
+            {step === 2 && (
+              <form onSubmit={handleStep2Submit}>
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="grid place-items-center w-11 h-11 rounded-xl bg-amber-100 text-amber-600">
+                    <LineStarSolid width="22" height="22" />
+                  </span>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-ink">דרגו את הדירה</h2>
+                </div>
+
+                <div className="space-y-5">
+                  {[
+                    { label: t('rating.overall'), value: overallRating, onChange: setOverallRating },
+                    { label: t('rating.maintenance'), value: maintenanceQuality, onChange: setMaintenanceQuality },
+                    { label: t('rating.communication'), value: landlordCommunication, onChange: setLandlordCommunication },
+                    { label: t('rating.contractCompliance'), value: contractCompliance, onChange: setContractCompliance },
+                    { label: t('rating.timelyRepairs'), value: timelyRepairs, onChange: setTimelyRepairs },
+                    { label: t('rating.value'), value: valueRating, onChange: setValueRating },
+                  ].map((r) => (
+                    <div key={r.label} className="rounded-xl bg-canvas border border-black/5 p-4">
+                      <label className="block text-sm font-semibold text-ink mb-2">
+                        {r.label} <span className="text-red-500">*</span>
+                      </label>
+                      <RatingInput value={r.value} onChange={r.onChange} />
+                    </div>
+                  ))}
+                </div>
+
+                {error && (
+                  <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2">
+                    <LineAlert className="text-red-600 shrink-0 mt-0.5" width="18" height="18" />
+                    <p className="text-red-700 text-sm font-medium">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 mt-8">
+                  <button type="button" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-black/10 text-ink px-6 py-3.5 font-bold hover:bg-canvas">
+                    <LineArrowRight width="18" height="18" />
+                    חזרה
+                  </button>
+                  <button type="submit" className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-petrol text-white px-6 py-3.5 font-bold hover:bg-petrol-700">
+                    המשך לפרטים
+                    <LineArrowLeft width="18" height="18" />
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Step 3 */}
+            {step === 3 && (
+              <form onSubmit={handleFinalSubmit}>
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="grid place-items-center w-11 h-11 rounded-xl bg-petrol-50 text-petrol">
+                    <LineDoc width="22" height="22" />
+                  </span>
+                  <h2 className="font-heading font-extrabold text-2xl sm:text-3xl text-ink">ספרו לנו יותר</h2>
+                </div>
+
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-ink mb-2">
+                      {t('review.reviewText')} <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      value={reviewText}
+                      onChange={(e) => setReviewText(e.target.value)}
+                      placeholder="שתפו את החוויה שלכם… (לפחות 20 תווים)"
+                      rows={6}
+                      className={`${inputClass} resize-none`}
+                      required
+                    />
+                    <p className="mt-2 text-sm text-muted">
+                      {reviewText.length}/20 תווים מינימום
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <YesNo label="האם הפיקדון הוחזר במלואו?" value={depositReturned} onChange={setDepositReturned} />
+                    <YesNo label="האם בעל הבית עמד בתנאי החוזה?" value={contractRespected} onChange={setContractRespected} />
+                    <YesNo label="האם תיקונים בוצעו בזמן סביר?" value={repairsTimely} onChange={setRepairsTimely} />
+                  </div>
+
+                  <div className="space-y-4 pt-2">
+                    <h3 className="font-heading font-bold text-lg text-ink">על השכונה</h3>
+                    <YesNo label="האם יש חניה זמינה באזור?" value={parkingAvailable} onChange={setParkingAvailable} />
+                    <YesNo label="האם השכנים נעימים?" value={niceNeighbors} onChange={setNiceNeighbors} />
+                    <YesNo label="האם יש חנויות ושירותים בקרבת מקום?" value={nearbyAmenities} onChange={setNearbyAmenities} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-ink mb-2">תאריך כניסה</label>
+                      <input type="date" value={moveInDate} onChange={(e) => setMoveInDate(e.target.value)} className={inputClass} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-ink mb-2">תאריך יציאה</label>
+                      <input type="date" value={moveOutDate} onChange={(e) => setMoveOutDate(e.target.value)} className={inputClass} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-ink mb-2">שכר דירה חודשי (אופציונלי)</label>
+                    <input type="number" value={rentAmount} onChange={(e) => setRentAmount(e.target.value)} placeholder="₪" className={inputClass} />
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2">
+                    <LineAlert className="text-red-600 shrink-0 mt-0.5" width="18" height="18" />
+                    <p className="text-red-700 text-sm font-medium">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 mt-8">
+                  <button type="button" onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: 'smooth' }); }} disabled={isSubmitting} className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-black/10 text-ink px-6 py-3.5 font-bold hover:bg-canvas disabled:opacity-50">
+                    <LineArrowRight width="18" height="18" />
+                    חזרה
+                  </button>
+                  <button type="submit" disabled={isSubmitting} className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 disabled:opacity-50 disabled:shadow-none">
+                    {isSubmitting ? (
+                      <>
+                        <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                        שולח…
+                      </>
+                    ) : (
+                      <>
+                        <LineCheck width="18" height="18" />
+                        שלח ביקורת
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
+      </main>
 
-        <Card className="p-8 animate-scale-in">
-          {/* Step 1: Property Info */}
-          {step === 1 && (
-            <form onSubmit={handleStep1Submit}>
-              <div className="flex items-center gap-3 mb-6">
-                <Icon.Building className="w-8 h-8 text-primary-500" />
-                <h2 className="text-3xl font-bold text-gray-900">
-                  פרטי הדירה
-                </h2>
-              </div>
-
-              <div className="space-y-6">
-                {/* Street with Autocomplete */}
-                <div className="relative" ref={autocompleteRef}>
-                  <Input
-                    label={t('property.street')}
-                    value={street}
-                    onChange={(e) => {
-                      setStreet(e.target.value);
-                      setShowSuggestions(true);
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    placeholder="התחל להקליד כתובת..."
-                    required
-                  />
-
-                  {/* Loading indicator */}
-                  {isLoadingPlaces && (
-                    <div className="absolute left-3 top-10">
-                      <LoadingSpinner size="sm" />
-                    </div>
-                  )}
-
-                  {/* Suggestions dropdown */}
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-medium max-h-60 overflow-y-auto animate-slide-down">
-                      {suggestions.map((suggestion, index) => {
-                        const prediction = suggestion.placePrediction;
-                        const text = prediction?.text?.text || '';
-                        const mainText = prediction?.mainText?.text || text;
-                        const secondaryText = prediction?.secondaryText?.text || '';
-                        return (
-                          <button
-                            key={prediction?.placeId || index}
-                            type="button"
-                            onClick={() => handleSelectPlace(prediction?.placeId, text)}
-                            className="w-full px-4 py-3 text-right hover:bg-primary-50 transition-colors border-b border-gray-100 last:border-b-0"
-                          >
-                            <div className="flex items-start gap-2">
-                              <Icon.MapPin className="text-primary-600 flex-shrink-0 mt-1" />
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900">
-                                  {mainText}
-                                </div>
-                                {secondaryText && (
-                                  <div className="text-sm text-gray-500">
-                                    {secondaryText}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {(!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) ? (
-                    <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-                      <Icon.Alert className="text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div className="text-sm text-amber-700">
-                        <p className="font-medium">השלמה אוטומטית של כתובות אינה זמינה</p>
-                        <p className="text-xs mt-1">יש להזין את הכתובת ידנית</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="mt-2 text-sm text-gray-500 flex items-center gap-2">
-                      <Icon.Search className="w-4 h-4" />
-                      התחל להקליד והמערכת תציע כתובות
-                    </p>
-                  )}
-                </div>
-
-                <Input
-                  label={t('property.building')}
-                  value={buildingNumber}
-                  onChange={(e) => setBuildingNumber(e.target.value)}
-                  placeholder="למשל: 123"
-                  required
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label={t('property.floor')}
-                    value={floor}
-                    onChange={(e) => setFloor(e.target.value)}
-                    placeholder="למשל: 3"
-                  />
-                  <Input
-                    label={t('property.apartment')}
-                    value={apartment}
-                    onChange={(e) => setApartment(e.target.value)}
-                    placeholder="למשל: 12"
-                  />
-                </div>
-
-                <Input
-                  label={t('property.city')}
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="למשל: תל אביב"
-                  required
-                />
-              </div>
-
-              {error && (
-                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                  <Icon.Alert className="text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
-
-              <Button type="submit" className="w-full mt-8" size="lg">
-                המשך לדירוגים
-                <Icon.ArrowLeft className="mr-2" />
-              </Button>
-            </form>
-          )}
-
-          {/* Step 2: Ratings */}
-          {step === 2 && (
-            <form onSubmit={handleStep2Submit}>
-              <div className="flex items-center gap-3 mb-6">
-                <Icon.Star className="w-8 h-8 text-primary-500" />
-                <h2 className="text-3xl font-bold text-gray-900">
-                  דרג את הדירה
-                </h2>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('rating.overall')} <span className="text-red-500">*</span>
-                  </label>
-                  <RatingInput value={overallRating} onChange={setOverallRating} />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('rating.maintenance')} <span className="text-red-500">*</span>
-                  </label>
-                  <RatingInput value={maintenanceQuality} onChange={setMaintenanceQuality} />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('rating.communication')} <span className="text-red-500">*</span>
-                  </label>
-                  <RatingInput value={landlordCommunication} onChange={setLandlordCommunication} />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('rating.contractCompliance')} <span className="text-red-500">*</span>
-                  </label>
-                  <RatingInput value={contractCompliance} onChange={setContractCompliance} />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('rating.timelyRepairs')} <span className="text-red-500">*</span>
-                  </label>
-                  <RatingInput value={timelyRepairs} onChange={setTimelyRepairs} />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('rating.value')} <span className="text-red-500">*</span>
-                  </label>
-                  <RatingInput value={valueRating} onChange={setValueRating} />
-                </div>
-              </div>
-
-              {error && (
-                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                  <Icon.Alert className="text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
-
-              <div className="flex gap-4 mt-8">
-                <Button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  variant="ghost"
-                  className="flex-1"
-                  size="lg"
-                >
-                  <Icon.ArrowRight className="ml-2" />
-                  חזור
-                </Button>
-                <Button type="submit" className="flex-1" size="lg">
-                  המשך לפרטים
-                  <Icon.ArrowLeft className="mr-2" />
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {/* Step 3: Additional Details */}
-          {step === 3 && (
-            <form onSubmit={handleFinalSubmit}>
-              <div className="flex items-center gap-3 mb-6">
-                <Icon.FileText className="w-8 h-8 text-primary-500" />
-                <h2 className="text-3xl font-bold text-gray-900">
-                  ספר לנו יותר
-                </h2>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('review.reviewText')} <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
-                    placeholder="שתף את החוויה שלך... (לפחות 20 תווים)"
-                    rows={6}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                    required
-                  />
-                  <p className="mt-2 text-sm text-gray-500">
-                    {reviewText.length}/20 תווים מינימום
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      האם הפיקדון הוחזר במלואו?
-                    </label>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setDepositReturned(true)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          depositReturned === true
-                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.Check className="w-5 h-5" />
-                        {t('review.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDepositReturned(false)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          depositReturned === false
-                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.XMark className="w-5 h-5" />
-                        {t('review.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      האם בעל הבית עמד בתנאי החוזה?
-                    </label>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setContractRespected(true)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          contractRespected === true
-                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.Check className="w-5 h-5" />
-                        {t('review.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setContractRespected(false)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          contractRespected === false
-                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.XMark className="w-5 h-5" />
-                        {t('review.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      האם תיקונים בוצעו בזמן סביר?
-                    </label>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setRepairsTimely(true)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          repairsTimely === true
-                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.Check className="w-5 h-5" />
-                        {t('review.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRepairsTimely(false)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          repairsTimely === false
-                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.XMark className="w-5 h-5" />
-                        {t('review.no')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Neighborhood Tags */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-gray-900">על השכונה</h3>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      האם יש חניה זמינה באזור?
-                    </label>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setParkingAvailable(true)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          parkingAvailable === true
-                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.Check className="w-5 h-5" />
-                        {t('review.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setParkingAvailable(false)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          parkingAvailable === false
-                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.XMark className="w-5 h-5" />
-                        {t('review.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      האם השכנים נעימים?
-                    </label>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setNiceNeighbors(true)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          niceNeighbors === true
-                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.Check className="w-5 h-5" />
-                        {t('review.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNiceNeighbors(false)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          niceNeighbors === false
-                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.XMark className="w-5 h-5" />
-                        {t('review.no')}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
-                      האם יש חנויות ושירותים בקרבת מקום?
-                    </label>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setNearbyAmenities(true)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          nearbyAmenities === true
-                            ? 'border-accent-500 bg-accent-50 text-accent-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.Check className="w-5 h-5" />
-                        {t('review.yes')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNearbyAmenities(false)}
-                        className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          nearbyAmenities === false
-                            ? 'border-red-500 bg-red-50 text-red-700 shadow-soft'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                      >
-                        <Icon.XMark className="w-5 h-5" />
-                        {t('review.no')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="תאריך כניסה"
-                    type="date"
-                    value={moveInDate}
-                    onChange={(e) => setMoveInDate(e.target.value)}
-                  />
-                  <Input
-                    label="תאריך יציאה"
-                    type="date"
-                    value={moveOutDate}
-                    onChange={(e) => setMoveOutDate(e.target.value)}
-                  />
-                </div>
-
-                <Input
-                  label="שכר דירה (אופציונלי)"
-                  type="number"
-                  value={rentAmount}
-                  onChange={(e) => setRentAmount(e.target.value)}
-                  placeholder="₪"
-                />
-              </div>
-
-              {error && (
-                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                  <Icon.Alert className="text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
-
-              <div className="flex gap-4 mt-8">
-                <Button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  variant="ghost"
-                  className="flex-1"
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  <Icon.ArrowRight className="ml-2" />
-                  חזור
-                </Button>
-                <Button
-                  type="submit"
-                  variant="accent"
-                  className="flex-1"
-                  size="lg"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <LoadingSpinner size="sm" />
-                      שולח...
-                    </>
-                  ) : (
-                    <>
-                      <Icon.Dragon className="ml-2" />
-                      שלח ביקורת
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          )}
-        </Card>
-      </div>
+      <Footer />
     </div>
   );
 }

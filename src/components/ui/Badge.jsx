@@ -1,13 +1,14 @@
 import { cn } from '../../utils/cn'
 
+// warm-trust system: two brand colors + neutrals (kept API-compatible)
 const variants = {
-  primary: 'bg-primary-100 text-primary-700 border-primary-200',
-  secondary: 'bg-secondary-100 text-secondary-700 border-secondary-200',
-  success: 'bg-green-100 text-green-700 border-green-200',
+  primary: 'bg-petrol-50 text-petrol border-petrol/15',
+  secondary: 'bg-sand text-ink border-black/5',
+  success: 'bg-petrol-50 text-petrol border-petrol/15',
   danger: 'bg-red-100 text-red-700 border-red-200',
-  warning: 'bg-amber-100 text-amber-700 border-amber-200',
-  info: 'bg-blue-100 text-blue-700 border-blue-200',
-  neutral: 'bg-gray-100 text-gray-700 border-gray-200',
+  warning: 'bg-amber-100 text-amber-600 border-amber/20',
+  info: 'bg-petrol-50 text-petrol border-petrol/15',
+  neutral: 'bg-canvas text-ink border-black/5',
 }
 
 export function Badge({

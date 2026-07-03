@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import Icon from '../components/icons'
-import { Card, CardBody } from '../components/ui/Card'
+import PageHero from '../components/PageHero'
+import { useScrollReveal } from '../hooks/useScrollReveal'
+import { LineChat, LineChevronLeft, LineSearch } from '../components/icons/line'
 
 const faqs = [
   {
@@ -43,17 +45,24 @@ function FaqItem({ question, answer }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="border-b border-gray-200 last:border-b-0">
+    <div className="border-b border-black/5 last:border-b-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-5 text-right gap-4"
+        className="w-full flex items-center justify-between py-5 text-right gap-4 group"
         dir="rtl"
+        aria-expanded={open}
       >
-        <span className="font-bold text-gray-900 text-lg">{question}</span>
-        <Icon.ChevronDown className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+        <span className="font-heading font-bold text-ink text-lg group-hover:text-petrol transition-colors">
+          {question}
+        </span>
+        <span
+          className={`grid place-items-center shrink-0 w-8 h-8 rounded-full bg-canvas text-petrol transition-transform ${open ? '-rotate-90' : ''}`}
+        >
+          <LineChevronLeft width="16" height="16" />
+        </span>
       </button>
       {open && (
-        <div className="pb-5 text-gray-600 leading-relaxed" dir="rtl">
+        <div className="pb-5 text-muted leading-relaxed animate-slide-down" dir="rtl">
           {answer}
         </div>
       )}
@@ -62,6 +71,8 @@ function FaqItem({ question, answer }) {
 }
 
 export default function FaqPage() {
+  useScrollReveal([])
+
   useEffect(() => {
     const schema = {
       '@context': 'https://schema.org',
@@ -83,22 +94,35 @@ export default function FaqPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <Card className="shadow-soft">
-          <CardBody className="p-8 md:p-12">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">שאלות נפוצות</h1>
-            <p className="text-gray-500 mb-8">תשובות לשאלות הנפוצות ביותר על דירגון</p>
 
-            <div>
-              {faqs.map((faq, index) => (
-                <FaqItem key={index} question={faq.question} answer={faq.answer} />
-              ))}
-            </div>
-          </CardBody>
-        </Card>
+      <PageHero
+        icon={LineChat}
+        title="שאלות נפוצות"
+        subtitle="תשובות לשאלות הנפוצות ביותר על דירגון."
+      />
+
+      <main id="main-content" className="flex-1">
+        <div className="max-w-3xl mx-auto px-5 lg:px-8 -mt-8 lg:-mt-12 pb-16">
+          <div className="reveal bg-white rounded-2xl shadow-card border border-black/5 p-6 lg:p-10">
+            {faqs.map((faq, index) => (
+              <FaqItem key={index} question={faq.question} answer={faq.answer} />
+            ))}
+          </div>
+
+          <div className="reveal mt-8 text-center">
+            <p className="text-muted">לא מצאתם תשובה?</p>
+            <Link
+              to="/contact"
+              className="btn mt-3 inline-flex items-center gap-2 rounded-full bg-white border border-black/5 shadow-sm px-6 py-3 font-semibold text-petrol hover:shadow-card"
+            >
+              <LineSearch width="16" height="16" /> צרו קשר
+            </Link>
+          </div>
+        </div>
       </main>
+
       <Footer />
     </div>
   )

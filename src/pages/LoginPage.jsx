@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import Header from '../components/Header'
+import Footer from '../components/Footer'
 import { logger } from '../utils/logger'
-import Icon from '../components/icons'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Card } from '../components/ui/Card'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import {
+  LineCheck, LineAlert, LineUser, LineLock, LineBadgeCheck, LineHeart,
+} from '../components/icons/line'
 
 export default function LoginPage() {
   const { t } = useTranslation()
@@ -27,7 +26,6 @@ export default function LoginPage() {
 
   const from = location.state?.from || '/'
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       logger.log('✅ User already logged in, redirecting to:', from)
@@ -45,23 +43,18 @@ export default function LoginPage() {
 
       if (error) {
         logger.error('❌ Google sign in error:', error)
-        // Check if Google provider is not configured
         if (error.message?.includes('provider') || error.message?.includes('not enabled')) {
           throw new Error('Google Sign-In לא מוגדר. אנא הגדר את Google OAuth ב-Supabase Dashboard > Authentication > Providers')
         }
         throw error
       }
 
-      // If we get a URL, it means redirect will happen
       if (data?.url) {
         logger.log('✅ Redirecting to Google:', data.url)
         window.location.href = data.url
       } else {
         logger.log('⚠️ No redirect URL received')
-        // Google auth should redirect automatically, but if not, wait a bit
-        setTimeout(() => {
-          setLoading(false)
-        }, 2000)
+        setTimeout(() => setLoading(false), 2000)
       }
     } catch (error) {
       logger.error('Google sign in error:', error)
@@ -77,7 +70,6 @@ export default function LoginPage() {
     try {
       const { error } = await signInWithApple()
       if (error) throw error
-      // Apple auth redirects automatically
     } catch (error) {
       setError(error.message)
       setLoading(false)
@@ -97,7 +89,6 @@ export default function LoginPage() {
 
         if (error) {
           logger.error('❌ Login error:', error)
-          // Better error messages
           if (error.message?.includes('Invalid login credentials')) {
             throw new Error('אימייל או סיסמה שגויים')
           } else if (error.message?.includes('Email not confirmed')) {
@@ -109,20 +100,15 @@ export default function LoginPage() {
         if (data?.user) {
           logger.log('✅ Login successful, user:', data.user.email)
           setSuccess('התחברת בהצלחה!')
-          // Wait a bit for AuthContext to update, then navigate
           setTimeout(() => {
             logger.log('✅ Navigating to:', from)
             navigate(from, { replace: true })
           }, 300)
         } else {
           logger.log('⚠️ Login successful but no user data')
-          // Still navigate, AuthContext will handle it
-          setTimeout(() => {
-            navigate(from, { replace: true })
-          }, 500)
+          setTimeout(() => navigate(from, { replace: true }), 500)
         }
       } else {
-        // Signup validation
         if (password !== confirmPassword) {
           throw new Error('הסיסמאות לא תואמות')
         }
@@ -140,7 +126,6 @@ export default function LoginPage() {
 
         logger.log('✅ Signup successful')
         setSuccess('נשלח אליך אימייל לאימות החשבון!')
-        // Clear form
         setEmail('')
         setPassword('')
       }
@@ -152,52 +137,58 @@ export default function LoginPage() {
     }
   }
 
+  const inputClass =
+    'w-full rounded-xl bg-canvas border border-black/10 px-4 py-3 text-[15px] text-ink ' +
+    'placeholder:text-muted/70 outline-none transition-colors focus:border-petrol focus:ring-2 focus:ring-petrol/20'
+
+  const trustItems = [
+    { Icon: LineLock, label: 'מאובטח לחלוטין' },
+    { Icon: LineBadgeCheck, label: 'ביקורות מאומתות' },
+    { Icon: LineHeart, label: 'חינם לחלוטין' },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
       <Header />
 
-      <main className="container mx-auto px-4 py-16">
-        <div className="max-w-md mx-auto">
-          {/* Card */}
-          <Card className="p-8 shadow-strong">
+      <main id="main-content" className="flex-1 grid place-items-center px-5 py-14 lg:py-20">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-card border border-black/5 p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <Icon.Dragon className="w-20 h-20 mx-auto mb-4 text-primary-500" />
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {mode === 'login' ? 'ברוך הבא חזרה!' : 'הצטרף לדירגון'}
+              <span className="mx-auto grid place-items-center w-16 h-16 rounded-2xl bg-petrol text-white shadow-lift">
+                <LineBadgeCheck width="30" height="30" />
+              </span>
+              <h1 className="mt-5 font-heading font-black text-3xl text-ink">
+                {mode === 'login' ? 'ברוכים השבים' : 'הצטרפו לדירגון'}
               </h1>
-              <p className="text-gray-600">
+              <p className="mt-2 text-muted">
                 {mode === 'login'
-                  ? 'התחבר כדי לכתוב דירגונים'
-                  : 'צור חשבון ותתחיל לדרג דירות'}
+                  ? 'התחברו כדי לכתוב ולקרוא ביקורות'
+                  : 'צרו חשבון והתחילו לדרג דירות'}
               </p>
             </div>
 
-            {/* Success Message */}
             {success && (
-              <div className="mb-6 p-4 bg-accent-50 border border-accent-200 rounded-lg flex items-start gap-2">
-                <Icon.Check className="text-accent-600 flex-shrink-0 mt-0.5" />
-                <p className="text-accent-700 text-sm">{success}</p>
+              <div className="mb-6 p-4 rounded-xl bg-petrol-50 border border-petrol/15 flex items-start gap-2.5">
+                <LineCheck className="text-petrol shrink-0 mt-0.5" width="18" height="18" />
+                <p className="text-petrol text-sm font-medium">{success}</p>
               </div>
             )}
 
-            {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                <Icon.Alert className="text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-red-700 text-sm">{error}</p>
+              <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2.5">
+                <LineAlert className="text-red-600 shrink-0 mt-0.5" width="18" height="18" />
+                <p className="text-red-700 text-sm font-medium">{error}</p>
               </div>
             )}
 
-            {/* Social Login Buttons */}
+            {/* Social Login */}
             <div className="space-y-3 mb-6">
               <button
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3
-                         border-2 border-gray-300 rounded-xl hover:border-primary-500
-                         hover:bg-gray-50 transition-all font-medium disabled:opacity-50
-                         shadow-soft hover:shadow-medium"
+                className="btn w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl border border-black/10 bg-white font-semibold text-ink hover:border-petrol/40 hover:bg-canvas disabled:opacity-50"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -211,10 +202,7 @@ export default function LoginPage() {
               <button
                 onClick={handleAppleSignIn}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3
-                         bg-black text-white rounded-xl hover:bg-gray-800
-                         transition-all font-medium disabled:opacity-50
-                         shadow-soft hover:shadow-medium"
+                className="btn w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-ink text-white font-semibold hover:bg-black disabled:opacity-50"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
@@ -226,28 +214,31 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-black/10" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">או</span>
+                <span className="px-4 bg-white text-muted font-medium">או</span>
               </div>
             </div>
 
-            {/* Email/Password Form */}
+            {/* Email / Password */}
             <form onSubmit={handleEmailSubmit} className="space-y-5">
-              <Input
-                label={t('form.email')}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="your@email.com"
-                dir="ltr"
-              />
+              <div>
+                <label className="block text-sm font-semibold text-ink mb-2">{t('form.email')}</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="your@email.com"
+                  dir="ltr"
+                  className={inputClass}
+                />
+              </div>
 
               <div>
-                <Input
-                  label={t('form.password')}
+                <label className="block text-sm font-semibold text-ink mb-2">{t('form.password')}</label>
+                <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -255,84 +246,74 @@ export default function LoginPage() {
                   minLength={6}
                   placeholder="••••••••"
                   dir="ltr"
+                  className={inputClass}
                 />
                 {mode === 'signup' && (
-                  <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                    <Icon.Alert className="w-3 h-3" />
-                    לפחות 6 תווים
+                  <p className="text-xs text-muted mt-2 flex items-center gap-1">
+                    <LineAlert width="13" height="13" /> לפחות 6 תווים
                   </p>
                 )}
               </div>
 
               {mode === 'signup' && (
-                <Input
-                  label="אימות סיסמה"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="••••••••"
-                  dir="ltr"
-                />
+                <div>
+                  <label className="block text-sm font-semibold text-ink mb-2">אימות סיסמה</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    placeholder="••••••••"
+                    dir="ltr"
+                    className={inputClass}
+                  />
+                </div>
               )}
 
               {mode === 'signup' && (
-                <label className="flex items-start gap-2 cursor-pointer" dir="rtl">
+                <label className="flex items-start gap-2.5 cursor-pointer" dir="rtl">
                   <input
                     type="checkbox"
                     checked={agreeTerms}
                     onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                    className="mt-1 w-4 h-4 accent-petrol rounded border-black/20"
                     required
                   />
-                  <span className="text-sm text-gray-600">
-                    אני מסכים/ה ל<a href="/terms" target="_blank" className="text-primary-600 hover:underline font-medium">תנאי השימוש</a> ול<a href="/privacy" target="_blank" className="text-primary-600 hover:underline font-medium">מדיניות הפרטיות</a>
+                  <span className="text-sm text-muted">
+                    אני מסכים/ה ל<Link to="/terms" target="_blank" className="text-petrol hover:underline font-semibold">תנאי השימוש</Link> ול<Link to="/privacy" target="_blank" className="text-petrol hover:underline font-semibold">מדיניות הפרטיות</Link>
                   </span>
                 </label>
               )}
 
-              <Button
+              <button
                 type="submit"
                 disabled={loading}
-                className="w-full"
-                size="lg"
+                className="btn w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 disabled:opacity-50 disabled:shadow-none"
               >
                 {loading ? (
                   <>
-                    <LoadingSpinner size="sm" />
-                    טוען...
+                    <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    טוען…
                   </>
                 ) : (
                   <>
-                    {mode === 'login' ? (
-                      <>
-                        <Icon.User className="ml-2" />
-                        {t('auth.login')}
-                      </>
-                    ) : (
-                      <>
-                        <Icon.User className="ml-2" />
-                        {t('auth.signup')}
-                      </>
-                    )}
+                    <LineUser width="18" height="18" />
+                    {mode === 'login' ? t('auth.login') : t('auth.signup')}
                   </>
                 )}
-              </Button>
+              </button>
             </form>
 
-            {/* Toggle Mode */}
+            {/* Toggle mode */}
             <div className="mt-6 text-center text-sm">
-              <span className="text-gray-600">
+              <span className="text-muted">
                 {mode === 'login' ? t('auth.noAccount') : t('auth.hasAccount')}
-              </span>
-              {' '}
+              </span>{' '}
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault()
+                onClick={() => {
                   const newMode = mode === 'login' ? 'signup' : 'login'
-                  logger.log('Switching mode from', mode, 'to', newMode)
                   setMode(newMode)
                   setError('')
                   setSuccess('')
@@ -341,38 +322,32 @@ export default function LoginPage() {
                   setConfirmPassword('')
                   setAgreeTerms(false)
                 }}
-                className="text-primary-600 hover:text-primary-700 hover:underline font-semibold cursor-pointer"
+                className="text-petrol hover:text-petrol-700 hover:underline font-bold cursor-pointer"
               >
-                {mode === 'login' ? 'הירשם עכשיו' : t('auth.login')}
+                {mode === 'login' ? 'הירשמו עכשיו' : t('auth.login')}
               </button>
             </div>
-          </Card>
-
-          {/* Info */}
-          <p className="text-center text-sm text-gray-500 mt-6">
-            בהרשמה, אתה מסכים ל
-            <a href="/terms" className="text-primary-600 hover:text-primary-700 hover:underline mx-1 font-medium">תנאי השימוש</a>
-            ול
-            <a href="/privacy" className="text-primary-600 hover:text-primary-700 hover:underline mx-1 font-medium">מדיניות הפרטיות</a>
-          </p>
-
-          {/* Additional Info Cards */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-4 text-center hover:shadow-medium transition-shadow">
-              <Icon.Lock className="w-8 h-8 mx-auto mb-2 text-primary-500" />
-              <p className="text-sm text-gray-600 font-medium">מאובטח לחלוטין</p>
-            </Card>
-            <Card className="p-4 text-center hover:shadow-medium transition-shadow">
-              <Icon.Dragon className="w-8 h-8 mx-auto mb-2 text-secondary-500" />
-              <p className="text-sm text-gray-600 font-medium">ביקורות מאומתות</p>
-            </Card>
-            <Card className="p-4 text-center hover:shadow-medium transition-shadow">
-              <Icon.Heart className="w-8 h-8 mx-auto mb-2 text-accent-500" />
-              <p className="text-sm text-gray-600 font-medium">חינם לחלוטין</p>
-            </Card>
           </div>
+
+          {/* Trust chips */}
+          <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm">
+            {trustItems.map(({ Icon, label }) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-2 rounded-full bg-white border border-black/5 shadow-sm px-4 py-2 font-semibold text-ink"
+              >
+                <Icon className="text-petrol" width="16" height="16" /> {label}
+              </span>
+            ))}
+          </div>
+
+          <p className="text-center text-sm text-muted mt-5">
+            ההתחברות נדרשת רק כדי למנוע ספאם ולשמור על אמינות הביקורות.
+          </p>
         </div>
       </main>
+
+      <Footer />
     </div>
   )
 }

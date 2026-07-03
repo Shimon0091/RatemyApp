@@ -113,17 +113,17 @@ export default function ReviewCard({ review }) {
   }
   
   return (
-    <Card className="shadow-soft hover:shadow-medium transition-all">
+    <Card hover className="shadow-card">
       <CardBody className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center shadow-soft">
-              <Icon.User className="w-6 h-6 text-primary-700" />
+            <div className="w-12 h-12 bg-petrol-50 rounded-full flex items-center justify-center">
+              <Icon.User className="w-6 h-6 text-petrol" />
             </div>
             <div>
-              <div className="font-medium text-gray-900">{t('reviewCard.anonymousRenter')}</div>
-              <div className="flex items-center gap-1 text-sm text-gray-500">
+              <div className="font-semibold text-ink">{t('reviewCard.anonymousRenter')}</div>
+              <div className="flex items-center gap-1 text-sm text-muted">
                 <Icon.Calendar className="w-3 h-3" />
                 {formatDate(review.date)}
               </div>
@@ -132,32 +132,32 @@ export default function ReviewCard({ review }) {
 
           <RatingStars rating={review.overall_rating} size="md" />
         </div>
-      
+
         {/* Category Ratings */}
         {(review.maintenance_rating || review.communication_rating || review.value_rating) && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 pb-4 border-b border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4 pb-4 border-b border-black/5">
             {review.maintenance_rating && (
-              <div className="bg-primary-50/50 p-3 rounded-lg">
-                <div className="flex items-center gap-1 text-xs text-gray-700 mb-1 font-medium">
-                  <Icon.Wrench className="w-3 h-3" />
+              <div className="bg-canvas p-3 rounded-xl">
+                <div className="flex items-center gap-1 text-xs text-muted mb-1 font-medium">
+                  <Icon.Wrench className="w-3 h-3 text-petrol" />
                   {t('rating.maintenance')}
                 </div>
                 <RatingStars rating={review.maintenance_rating} size="sm" showNumber={false} />
               </div>
             )}
             {review.communication_rating && (
-              <div className="bg-secondary-50/50 p-3 rounded-lg">
-                <div className="flex items-center gap-1 text-xs text-gray-700 mb-1 font-medium">
-                  <Icon.MessageCircle className="w-3 h-3" />
+              <div className="bg-canvas p-3 rounded-xl">
+                <div className="flex items-center gap-1 text-xs text-muted mb-1 font-medium">
+                  <Icon.MessageCircle className="w-3 h-3 text-petrol" />
                   {t('rating.communication')}
                 </div>
                 <RatingStars rating={review.communication_rating} size="sm" showNumber={false} />
               </div>
             )}
             {review.value_rating && (
-              <div className="bg-accent-50/50 p-3 rounded-lg">
-                <div className="flex items-center gap-1 text-xs text-gray-700 mb-1 font-medium">
-                  <Icon.DollarSign className="w-3 h-3" />
+              <div className="bg-canvas p-3 rounded-xl">
+                <div className="flex items-center gap-1 text-xs text-muted mb-1 font-medium">
+                  <Icon.DollarSign className="w-3 h-3 text-petrol" />
                   {t('rating.value')}
                 </div>
                 <RatingStars rating={review.value_rating} size="sm" showNumber={false} />
@@ -184,30 +184,30 @@ export default function ReviewCard({ review }) {
       
         {/* Review Text */}
         <div className="mb-4">
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{review.text}</p>
+          <p className="text-ink/90 leading-relaxed whitespace-pre-wrap">{review.text}</p>
         </div>
 
         {/* Rental Period */}
         {review.rental_period && (
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-4 bg-gray-50 px-3 py-2 rounded-lg">
-            <Icon.Calendar className="w-4 h-4 text-primary-500" />
+          <div className="flex items-center gap-2 text-sm text-muted mb-4 bg-canvas px-3 py-2 rounded-xl">
+            <Icon.Calendar className="w-4 h-4 text-petrol" />
             <span className="font-medium">{t('reviewCard.rentalPeriod')}:</span>
             <span>{review.rental_period}</span>
           </div>
         )}
-      
+
         {/* Helpful Buttons */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-black/5">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span className="text-sm text-gray-600 font-medium">{t('reviewCard.wasHelpful')}</span>
+            <span className="text-sm text-muted font-medium">{t('reviewCard.wasHelpful')}</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleVote(true)}
                 disabled={voting}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                className={`btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium ${
                   helpful === 'yes'
-                    ? 'bg-accent-100 text-accent-700 shadow-soft'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-petrol-50 text-petrol border border-petrol/15'
+                    : 'bg-canvas text-muted hover:text-petrol'
                 } ${voting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Icon.ThumbsUp />
@@ -216,10 +216,10 @@ export default function ReviewCard({ review }) {
               <button
                 onClick={() => handleVote(false)}
                 disabled={voting}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                className={`btn flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium ${
                   helpful === 'no'
-                    ? 'bg-red-100 text-red-700 shadow-soft'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-red-100 text-red-700 border border-red-200'
+                    : 'bg-canvas text-muted hover:text-red-600'
                 } ${voting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Icon.ThumbsDown />
@@ -232,7 +232,7 @@ export default function ReviewCard({ review }) {
           {!reported && (
             <button
               onClick={() => setShowReportModal(true)}
-              className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-600 transition-colors"
+              className="flex items-center gap-1 text-sm text-muted hover:text-red-600 transition-colors"
               title={t('reviewCard.reportTitle')}
             >
               <Icon.Flag className="w-4 h-4" />
@@ -240,7 +240,7 @@ export default function ReviewCard({ review }) {
             </button>
           )}
           {reported && (
-            <span className="flex items-center gap-1 text-sm text-gray-400">
+            <span className="flex items-center gap-1 text-sm text-muted">
               <Icon.Check className="w-4 h-4" />
               {t('reviewCard.reported')}
             </span>
@@ -268,7 +268,7 @@ export default function ReviewCard({ review }) {
               <select
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
+                className="w-full px-4 py-2 border border-black/10 rounded-xl bg-canvas focus:border-petrol focus:ring-2 focus:ring-petrol/20 focus:outline-none transition-colors"
               >
                 <option value="">{t('reviewCard.reportModal.selectReason')}</option>
                 <option value="spam">{t('reviewCard.reportModal.spam')}</option>
@@ -287,7 +287,7 @@ export default function ReviewCard({ review }) {
               <textarea
                 value={reportDetails}
                 onChange={(e) => setReportDetails(e.target.value)}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none resize-none transition-colors"
+                className="w-full px-4 py-2 border border-black/10 rounded-xl bg-canvas focus:border-petrol focus:ring-2 focus:ring-petrol/20 focus:outline-none resize-none transition-colors"
                 rows={3}
                 placeholder={t('reviewCard.reportModal.detailsPlaceholder')}
               />

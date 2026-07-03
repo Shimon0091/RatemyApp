@@ -1,3 +1,5 @@
+-- ⚠️ אזהרה: מיושן — מכיל מדיניות UPDATE לביקורות בלי אכיפת status='pending' (self-approve).
+-- ה-DB החי כבר מוקשח (ראה migration_fix_rls_hardening.sql). אל תריץ קובץ זה שוב על החי.
 -- ======================
 -- MIGRATION: Add missing RLS policies
 -- Run this in Supabase SQL Editor (Dashboard > SQL Editor > New Query)

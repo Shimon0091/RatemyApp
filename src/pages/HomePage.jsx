@@ -1,38 +1,72 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Header from '../components/Header'
-import SearchBar from '../components/SearchBar'
+import Footer from '../components/Footer'
+import CountUp from '../components/CountUp'
+import { useScrollReveal } from '../hooks/useScrollReveal'
 import { getTopRatedProperties } from '../lib/database'
 import { supabase } from '../lib/supabase'
-import RatingStars from '../components/RatingStars'
 import { logger } from '../utils/logger'
-import Footer from '../components/Footer'
-import Icon from '../components/icons'
-import { Badge } from '../components/ui/Badge'
-import { Card } from '../components/ui/Card'
+
+const HERO_IMAGE =
+  'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1600&q=80'
+
+// TODO: placeholder social-proof numbers per owner; revisit before merging to main (real counts are ~19 properties / ~24 reviews).
+const DISPLAY_STATS = { reviews: 2140, properties: 680, neighborhoods: 12 }
+
+// ── small inline icons (match mockup F line-art exactly) ──
+const IconPin = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+)
+const IconStarSolid = (p) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 17.3 5.8 20.9l1.6-6.8L2.2 8.9l6.9-.6z" /></svg>
+)
+const IconCheck = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 6 9 17l-5-5" /></svg>
+)
+const IconArrowLeft = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+)
+const IconSearch = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+)
+const IconEdit = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+)
+const IconBook = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M2 7c3-2 6-2 10 0 4-2 7-2 10 0v13c-3-2-6-2-10 0-4-2-7-2-10 0Z" /><path d="M12 7v13" /></svg>
+)
+const IconDoc = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M14 3v5h5" /><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="m8.5 14 1.8 1.8 3.7-3.7" /></svg>
+)
+const IconBadgeCheck = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M7 11.5V21l5-2.5L17 21v-9.5" /><path d="M12 14a5 5 0 1 0-5-5 5 5 0 0 0 5 5Z" /></svg>
+)
+const IconBuilding = (p) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 21h18" /><path d="M5 21V7l7-4 7 4v14" /><path d="M9 21v-6h6v6" /><path d="M9 10h.01M15 10h.01" /></svg>
+)
 
 export default function HomePage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [topProperties, setTopProperties] = useState([])
-  const [stats, setStats] = useState({
-    totalReviews: 0,
-    totalProperties: 0,
-    neighborhoods: 12
-  })
+  const [stats, setStats] = useState({ totalReviews: 0, totalProperties: 0 })
   const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     loadData()
   }, [])
 
+  // Re-scan reveal targets once async data has rendered.
+  useScrollReveal([loading, topProperties.length])
+
   const loadData = async () => {
     try {
-      // Get top rated properties
-      const { data: properties } = await getTopRatedProperties(3)
+      const { data: properties } = await getTopRatedProperties(6)
       setTopProperties(properties || [])
 
-      // Get stats
       const { count: reviewsCount, error: reviewsError } = await supabase
         .from('reviews')
         .select('*', { count: 'exact', head: true })
@@ -45,12 +79,12 @@ export default function HomePage() {
       if (reviewsError) logger.error('Error loading reviews:', reviewsError)
       if (propertiesError) logger.error('Error loading properties:', propertiesError)
 
+      // Real DB counts still power the top-rated cards / "more properties" link.
+      // The stat BAND uses DISPLAY_STATS (owner-chosen social-proof numbers).
       setStats({
         totalReviews: reviewsCount || 0,
         totalProperties: propertiesCount || 0,
-        neighborhoods: 12
       })
-
     } catch (err) {
       logger.error('Error loading data:', err)
     } finally {
@@ -66,400 +100,291 @@ export default function HomePage() {
     return tags.slice(0, 2)
   }
 
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+    else navigate('/search')
+  }
+
+  const remaining = Math.max(0, stats.totalProperties - topProperties.length)
+  const chips = topProperties.slice(0, 3)
+  const chipPos = [
+    { top: '22%', left: '7%', dur: '6.5s', delay: '.2s' },
+    { top: '46%', left: '13%', dur: '7.5s', delay: '1.1s' },
+    { top: '30%', left: '30%', dur: '8s', delay: '.6s' },
+  ]
+
   return (
-    <div className="bg-gradient-to-br from-primary-50 via-white to-secondary-50 min-h-screen">
+    <div className="bg-canvas text-ink font-body min-h-screen overflow-x-hidden">
       <Header />
 
-      {/* Hero Section */}
-      <main className="container mx-auto px-4 py-12">
-        <div className="text-center mb-8 animate-fade-in">
-          <Badge variant="primary" className="mb-4 text-base">
-            <Icon.Dragon className="w-4 h-4 inline ml-2" />
-            {t('app.description')}
-          </Badge>
-          <h2 className="text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
-            {t('hero.title')}<br/>
-            <span className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-              {t('hero.subtitle')}
-            </span>
-          </h2>
-          <p className="text-2xl text-gray-600 mb-4 font-medium">
-            {t('hero.description')}
-          </p>
-          <div className="flex items-center justify-center gap-8 mt-6 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-accent-100 flex items-center justify-center">
-                <Icon.Check className="text-accent-600" />
-              </div>
-              <span className="text-lg font-bold text-gray-900">חינם לחלוטין</span>
-            </div>
-            <span className="text-gray-300 text-2xl">•</span>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-                <Icon.Dragon className="text-primary-600" />
-              </div>
-              <span className="text-lg font-bold text-gray-900">כל ביקורת מאומתת</span>
-            </div>
+      <main id="main-content">
+        {/* ============ HERO ============ */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src={HERO_IMAGE}
+              alt="דירה מודרנית ומוארת בישראל"
+              className="kenburns w-full h-full object-cover"
+              width="1600"
+              height="900"
+              fetchpriority="high"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-black/70 via-black/45 to-black/25" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
           </div>
-        </div>
 
-        {/* Search Bar */}
-        <div className="max-w-3xl mx-auto mb-16 animate-slide-up">
-          <SearchBar />
-        </div>
-
-        {/* Two Paths */}
-        <div className="max-w-6xl mx-auto mb-24 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-          <Card hover className="p-10 transform transition-all hover:scale-105 flex flex-col">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-medium">
-              <Icon.Eye className="w-10 h-10 text-white" />
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-4 text-center">
-              רוצה לקרוא ביקורות?
-            </h3>
-            <p className="text-gray-600 mb-8 text-center leading-relaxed text-lg">
-              מתלבט לגבי דירה? קרא ביקורות של שוכרים קודמים וקבל החלטה מושכלת
-            </p>
-            <ul className="space-y-4 flex-1">
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Icon.Check className="w-4 h-4 text-accent-600" />
-                </div>
-                <span className="text-gray-700 text-lg">ביקורות מאומתות בלבד</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Icon.Check className="w-4 h-4 text-accent-600" />
-                </div>
-                <span className="text-gray-700 text-lg">נתונים אמיתיים מהשטח</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Icon.Check className="w-4 h-4 text-accent-600" />
-                </div>
-                <span className="text-gray-700 text-lg">חינם לחלוטין</span>
-              </li>
-            </ul>
-            <Link
-              to="/search"
-              className="block w-full px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-bold hover:from-primary-700 hover:to-primary-800 transition-all shadow-medium hover:shadow-strong text-lg transform hover:scale-105 text-center mt-8"
-            >
-              {t('hero.ctaSearch')}
-            </Link>
-          </Card>
-
-          <Card hover className="p-10 transform transition-all hover:scale-105 flex flex-col">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-medium">
-              <Icon.Edit className="w-10 h-10 text-white" />
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-4 text-center">
-              רוצה לכתוב ביקורת?
-            </h3>
-            <p className="text-gray-600 mb-8 text-center leading-relaxed text-lg">
-              גרת בדירה? עזור לשוכרים הבאים ושתף את החוויה שלך
-            </p>
-            <ul className="space-y-4 flex-1">
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Icon.Check className="w-4 h-4 text-accent-600" />
-                </div>
-                <span className="text-gray-700 text-lg">אנונימי לחלוטין</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Icon.Check className="w-4 h-4 text-accent-600" />
-                </div>
-                <span className="text-gray-700 text-lg">5 דקות בלבד</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0 mt-1">
-                  <Icon.Check className="w-4 h-4 text-accent-600" />
-                </div>
-                <span className="text-gray-700 text-lg">עזור לאחרים להחליט</span>
-              </li>
-            </ul>
-            <Link
-              to="/write-review"
-              className="block w-full px-8 py-4 bg-gradient-to-r from-accent-600 to-accent-700 text-white rounded-xl font-bold hover:from-accent-700 hover:to-accent-800 transition-all shadow-medium hover:shadow-strong text-lg transform hover:scale-105 text-center mt-8"
-            >
-              {t('hero.ctaWrite')}
-            </Link>
-          </Card>
-        </div>
-
-        {/* Stats — only show when there's real data */}
-        {!loading && (stats.totalReviews > 0 || stats.totalProperties > 0) && (
-          <div className="mb-24 max-w-3xl mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Badge variant="secondary" className="text-sm px-3 py-1">בטא</Badge>
-              <span className="text-gray-500 text-sm">הצטרפו לקהילה הגדלה שלנו</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="text-center p-6 hover:shadow-medium transition-shadow">
-                <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
-                  {stats.totalReviews.toLocaleString('he-IL')}
-                </div>
-                <div className="text-gray-600 font-medium text-lg">{t('stats.reviews')}</div>
-              </Card>
-              <Card className="text-center p-6 hover:shadow-medium transition-shadow">
-                <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent mb-2">
-                  {stats.totalProperties.toLocaleString('he-IL')}
-                </div>
-                <div className="text-gray-600 font-medium text-lg">{t('stats.properties')}</div>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Top Rated Properties */}
-        {topProperties.length > 0 && (
-          <div className="max-w-6xl mx-auto mb-32">
-            <h3 className="text-4xl font-bold text-gray-900 mb-8 text-center flex items-center justify-center gap-3">
-              <Icon.Star className="text-yellow-500" />
-              הדירות המדורגות ביותר
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {topProperties.map((property) => (
-                <Link
-                  key={property.id}
-                  to={`/property/${property.id}`}
+          {/* floating rating chips — real top-rated properties */}
+          {chips.length > 0 && (
+            <div className="hidden md:block pointer-events-none absolute inset-0 z-10">
+              {chips.map((p, i) => (
+                <div
+                  key={p.id}
+                  className="float-chip absolute bg-white rounded-2xl shadow-lift px-4 py-2.5 flex items-center gap-2.5"
+                  style={{ top: chipPos[i].top, left: chipPos[i].left, '--dur': chipPos[i].dur, '--delay': chipPos[i].delay }}
                 >
-                  <Card hover className="p-8 cursor-pointer transform transition-all hover:scale-105">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-start gap-2">
-                        <Icon.Building className="text-gray-400 flex-shrink-0 mt-1" />
-                        <div>
-                          <h4 className="font-bold text-2xl text-gray-900 mb-1">
-                            {property.street} {property.building_number}
-                          </h4>
-                          <p className="text-gray-600 font-medium text-sm">
-                            קומה {property.floor}, דירה {property.apartment} | {property.city}
-                          </p>
-                        </div>
-                      </div>
-                      {property.overall_rating > 0 && (
-                        <Badge variant="warning" className="flex items-center gap-1">
-                          <Icon.Star className="w-4 h-4 fill-current" />
-                          <span className="font-bold">
-                            {property.overall_rating?.toFixed(1)}
-                          </span>
-                        </Badge>
-                      )}
-                    </div>
-                    {property.overall_rating > 0 && (
-                      <div className="mb-4">
-                        <RatingStars rating={property.overall_rating} size="md" />
-                      </div>
-                    )}
-                    <p className="text-gray-600 mb-4 font-medium flex items-center gap-2">
-                      <Icon.Message className="w-4 h-4" />
-                      {property.total_reviews || 0} {t('property.reviews')}
-                    </p>
-                    <div className="flex gap-2 text-sm flex-wrap">
-                      {getPositiveTags(property).map((tag, index) => (
-                        <Badge
-                          key={index}
-                          variant="success"
-                          className="flex items-center gap-1"
-                        >
-                          <Icon.Check className="w-3 h-3" />
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </Card>
-                </Link>
+                  <span className="grid place-items-center w-8 h-8 rounded-lg bg-petrol-50 text-petrol">
+                    <IconPin width="16" height="16" />
+                  </span>
+                  <span className="text-sm">
+                    <span className="font-heading font-bold text-ink">{p.street} {p.building_number}</span>{' '}
+                    <span className="text-amber font-bold">★ {(p.overall_rating || 0).toFixed(1)}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="relative z-20 max-w-7xl mx-auto px-5 lg:px-8 pt-24 pb-40 lg:pt-32 lg:pb-52">
+            <div className="max-w-full sm:max-w-2xl mr-0 text-right reveal">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur text-white/95 border border-white/25 px-4 py-1.5 text-sm font-semibold mb-6">
+                <span className="w-2 h-2 rounded-full bg-amber" /> כל ביקורת מאומתת
+              </span>
+              <h1 className="text-white font-heading font-black leading-[1.08] text-[2rem] sm:text-5xl lg:text-[3.5rem] break-words">
+                דירגון: המקום שלך למצוא<br className="hidden sm:block" /> ולדרג דירות להשכרה.
+              </h1>
+              <p className="mt-5 text-lg lg:text-xl text-white/85 leading-relaxed max-w-xl mr-0">
+                קהילת השוכרים של ישראל משתפת ביקורות אמיתיות — כדי שתמצאו את הבית הבא בביטחון.
+              </p>
+            </div>
+
+            {/* search bar */}
+            <form
+              onSubmit={handleSearch}
+              className="reveal mt-9 max-w-3xl bg-white rounded-2xl shadow-bar p-2.5 flex flex-col sm:flex-row gap-2.5"
+            >
+              <div className="flex-1 flex items-center gap-2 px-4 rounded-xl bg-canvas">
+                <IconPin className="text-muted shrink-0" width="20" height="20" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  aria-label="חיפוש כתובת"
+                  placeholder="הכנס כתובת — לדוגמה: רוטשילד 45, תל אביב"
+                  className="w-full bg-transparent py-3.5 text-[15px] placeholder:text-muted/80 outline-none"
+                  dir="rtl"
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+              >
+                <IconSearch width="18" height="18" />
+                חפש ביקורות
+              </button>
+            </form>
+            <p className="reveal mt-4 text-white/80 text-sm">
+              הפלטפורמה הראשונה בישראל לדירוג דירות ובעלי בתים. בדוק ביקורות לפני שאתה שוכר.
+            </p>
+          </div>
+        </section>
+
+        {/* ============ OVERLAPPING CTA CARDS ============ */}
+        <section className="relative z-30 max-w-6xl mx-auto px-5 lg:px-8 -mt-24 lg:-mt-28">
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* write review */}
+            <div className="reveal lift bg-white rounded-2xl shadow-card p-7 border border-black/5">
+              <div className="flex items-start gap-4">
+                <span className="grid place-items-center w-12 h-12 rounded-xl bg-amber-100 text-amber-600 shrink-0">
+                  <IconEdit width="22" height="22" />
+                </span>
+                <div>
+                  <h3 className="font-heading font-bold text-xl text-ink">רוצה לכתוב ביקורת?</h3>
+                  <p className="text-muted mt-1.5 leading-relaxed">שתף את החוויה שלך מהדירה ומבעל הבית — עוזר לשוכרים הבאים.</p>
+                </div>
+              </div>
+              <Link
+                to="/write-review"
+                className="btn mt-5 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+              >
+                {t('hero.ctaWrite')}
+                <IconArrowLeft width="18" height="18" />
+              </Link>
+            </div>
+
+            {/* read reviews */}
+            <div className="reveal lift bg-white rounded-2xl shadow-card p-7 border border-black/5">
+              <div className="flex items-start gap-4">
+                <span className="grid place-items-center w-12 h-12 rounded-xl bg-petrol-50 text-petrol shrink-0">
+                  <IconBook width="22" height="22" />
+                </span>
+                <div>
+                  <h3 className="font-heading font-bold text-xl text-ink">רוצה לקרוא ביקורות?</h3>
+                  <p className="text-muted mt-1.5 leading-relaxed">מצא ביקורות אמיתיות על דירות ובעלי בתים לפני החתימה על החוזה.</p>
+                </div>
+              </div>
+              <Link
+                to="/search"
+                className="btn mt-5 inline-flex items-center gap-2 rounded-xl bg-petrol text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(14,90,84,0.7)] hover:bg-petrol-700"
+              >
+                {t('hero.ctaSearch')}
+                <IconArrowLeft width="18" height="18" />
+              </Link>
+            </div>
+          </div>
+
+          {/* trust chips */}
+          <div className="reveal mt-6 flex flex-wrap justify-center gap-3 text-sm">
+            {['אנונימי לחלוטין', 'ביקורות מאומתות', 'חינם לחלוטין'].map((label) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-2 rounded-full bg-white border border-black/5 shadow-sm px-4 py-2 font-semibold text-ink"
+              >
+                <IconCheck className="text-petrol" width="16" height="16" /> {label}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        {/* ============ STATS COUNTERS ============ */}
+        <section className="mt-20 lg:mt-24">
+          <div className="max-w-5xl mx-auto px-5 lg:px-8">
+            <div className="reveal grid grid-cols-3 rounded-2xl bg-petrol text-white overflow-hidden shadow-lift">
+              <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center border-l border-white/10">
+                <CountUp value={DISPLAY_STATS.reviews} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
+                <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">{t('stats.reviews')}</div>
+              </div>
+              <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center border-l border-white/10">
+                <CountUp value={DISPLAY_STATS.properties} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
+                <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">{t('stats.properties')}</div>
+              </div>
+              <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center">
+                <CountUp value={DISPLAY_STATS.neighborhoods} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
+                <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">שכונות</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============ HOW IT WORKS ============ */}
+        <section id="how-it-works" className="py-20 lg:py-28">
+          <div className="max-w-6xl mx-auto px-5 lg:px-8">
+            <div className="reveal text-center max-w-2xl mx-auto">
+              <h2 className="font-heading font-extrabold text-3xl lg:text-4xl text-ink">איך זה עובד?</h2>
+              <p className="mt-3 text-muted text-lg">שלושה צעדים פשוטים להחלטה בטוחה</p>
+            </div>
+
+            <div className="mt-14 grid md:grid-cols-3 gap-6">
+              {[
+                { n: 1, Icon: IconPin, title: 'חפש את הדירה', body: 'הקלד כתובת או שם שכונה ומצא את הדירה שמעניינת אותך תוך שניות.' },
+                { n: 2, Icon: IconDoc, title: 'קרא ביקורות אמיתיות', body: 'ביקורות מאומתות משוכרים קודמים על מהימנות, תחזוקה ותמורה למחיר.' },
+                { n: 3, Icon: IconBadgeCheck, title: 'קבל החלטה מושכלת', body: 'חתום על חוזה בביטחון — בלי הפתעות ובלי חרטות.' },
+              ].map((step) => (
+                <div key={step.n} className="reveal text-center px-6">
+                  <div className="relative mx-auto w-16 h-16">
+                    <span className="grid place-items-center w-16 h-16 rounded-2xl bg-petrol-50 text-petrol">
+                      <step.Icon width="28" height="28" />
+                    </span>
+                    <span className="absolute -top-2 -left-2 grid place-items-center w-7 h-7 rounded-full bg-amber-cta text-white text-xs font-bold">
+                      {step.n}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 font-heading font-bold text-xl text-ink">{step.title}</h3>
+                  <p className="mt-2 text-muted leading-relaxed">{step.body}</p>
+                </div>
               ))}
             </div>
           </div>
+        </section>
+
+        {/* ============ TOP RATED PROPERTIES ============ */}
+        {topProperties.length > 0 && (
+          <section id="top" className="py-20 lg:py-28 bg-sand">
+            <div className="max-w-6xl mx-auto px-5 lg:px-8">
+              <div className="reveal text-center max-w-2xl mx-auto">
+                <h2 className="font-heading font-extrabold text-3xl lg:text-4xl text-ink">הדירות המדורגות ביותר</h2>
+                <p className="mt-3 text-muted text-lg">דירות אמיתיות מדורגות על ידי שוכרים שגרו בהן</p>
+              </div>
+
+              <div className="mt-14 grid md:grid-cols-3 gap-6">
+                {topProperties.map((property, i) => (
+                  <article
+                    key={property.id}
+                    className="reveal lift bg-white rounded-2xl shadow-card border border-black/5 overflow-hidden"
+                  >
+                    {/* uniform gray placeholder — no photo field in DB yet */}
+                    <div className="relative h-48 grid place-items-center bg-[#EFEDE8]">
+                      <div className="text-center text-muted">
+                        <IconBuilding className="mx-auto" width="34" height="34" />
+                        <span className="block mt-2 text-sm font-medium">אין תמונה</span>
+                      </div>
+                      {i === 0 && (
+                        <span className="absolute top-3 right-3 rounded-full bg-petrol text-white text-xs font-bold px-3 py-1 shadow">
+                          מדורגת #1
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="font-heading font-bold text-lg text-ink">
+                          {property.street} {property.building_number}
+                        </h3>
+                        {property.overall_rating > 0 && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-100 text-amber-600 px-2.5 py-1 text-sm font-bold shrink-0">
+                            <IconStarSolid width="14" height="14" />
+                            {property.overall_rating.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-muted text-sm mt-1">
+                        {property.neighborhood || property.street} · {property.city}
+                      </p>
+                      <p className="text-muted text-sm mt-1">
+                        קומה {property.floor} · {property.total_reviews || 0} {t('property.reviews')}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {getPositiveTags(property).map((tag) => (
+                          <span key={tag} className="rounded-full bg-canvas text-ink text-xs font-medium px-3 py-1">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <Link
+                        to={`/property/${property.id}`}
+                        className="btn mt-5 w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-petrol/25 text-petrol font-semibold py-2.5 hover:bg-petrol-50"
+                      >
+                        קרא עוד
+                        <IconArrowLeft width="16" height="16" />
+                      </Link>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {remaining > 0 && (
+                <div className="reveal mt-10 text-center">
+                  <Link
+                    to="/search"
+                    className="btn inline-flex items-center gap-2 rounded-full bg-white border border-black/5 shadow-sm px-6 py-3 font-semibold text-petrol hover:shadow-card"
+                  >
+                    עוד {remaining.toLocaleString('he-IL')} דירות מדורגות
+                    <IconArrowLeft width="16" height="16" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          </section>
         )}
-
-        {/* How It Works */}
-        <div id="how-it-works" className="max-w-6xl mx-auto mb-32">
-          <div className="text-center mb-16">
-            <h3 className="text-5xl font-extrabold text-gray-900 mb-4">
-              איך זה עובד?
-            </h3>
-            <p className="text-xl text-gray-600 font-medium">
-              3 שלבים פשוטים לקבלת מידע אמיתי על הדירה שלך
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-medium">
-                <Icon.Search className="w-12 h-12 text-white" />
-              </div>
-              <Badge variant="primary" className="mb-4">שלב 1</Badge>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                חפש את הדירה
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                הזן את כתובת הדירה שאתה שוקל לשכור ומצא את כל הביקורות של שוכרים קודמים
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-secondary-500 to-secondary-600 flex items-center justify-center shadow-medium">
-                <Icon.FileText className="w-12 h-12 text-white" />
-              </div>
-              <Badge variant="secondary" className="mb-4">שלב 2</Badge>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                קרא ביקורות
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                למד על איכות התחזוקה, תקשורת עם בעל הבית, החזרת פיקדון ועוד
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-accent-500 to-accent-600 flex items-center justify-center shadow-medium">
-                <Icon.Check className="w-12 h-12 text-white" />
-              </div>
-              <Badge variant="success" className="mb-4">שלב 3</Badge>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                קבל החלטה מושכלת
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                השתמש במידע האמיתי כדי לבחור את הדירה הנכונה עבורך
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Why Diragon */}
-        <div id="about" className="max-w-6xl mx-auto mb-32">
-          <div className="text-center mb-16">
-            <h3 className="text-5xl font-extrabold text-gray-900 mb-4">
-              למה דירגון?
-            </h3>
-            <p className="text-xl text-gray-600 font-medium">
-              פלטפורמה לדירוג דירות שנבנית על ידי שוכרים, בשביל שוכרים
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card hover className="p-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary-100 flex items-center justify-center mb-6">
-                <Icon.Dragon className="w-8 h-8 text-primary-600" />
-              </div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                ביקורות מאומתות בלבד
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                כל ביקורת עוברת אימות ידני על ידי הצוות שלנו. אנחנו דואגים שכל המידע אמיתי ואמין.
-              </p>
-            </Card>
-
-            <Card hover className="p-8">
-              <div className="w-16 h-16 rounded-2xl bg-accent-100 flex items-center justify-center mb-6">
-                <Icon.Lock className="w-8 h-8 text-accent-600" />
-              </div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                אנונימיות מלאה
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                הביקורות שלך נשארות אנונימיות. אתה יכול לשתף את החוויה האמיתית שלך בלי חשש.
-              </p>
-            </Card>
-
-            <Card hover className="p-8">
-              <div className="w-16 h-16 rounded-2xl bg-secondary-100 flex items-center justify-center mb-6">
-                <Icon.TrendingUp className="w-8 h-8 text-secondary-600" />
-              </div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                נתונים מפורטים
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                קבל מידע מדויק על כל היבט - תחזוקה, תקשורת, החזרת פיקדון, עמידה בחוזה ועוד.
-              </p>
-            </Card>
-
-            <Card hover className="p-8">
-              <div className="w-16 h-16 rounded-2xl bg-yellow-100 flex items-center justify-center mb-6">
-                <Icon.Heart className="w-8 h-8 text-yellow-600" />
-              </div>
-              <h4 className="text-2xl font-bold text-gray-900 mb-3">
-                חינם לחלוטין
-              </h4>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                אין עלויות נסתרות. הפלטפורמה שלנו חינמית לגמרי למשתמשים - תמיד.
-              </p>
-            </Card>
-          </div>
-        </div>
-
-        {/* Trust & Safety */}
-        <div className="max-w-6xl mx-auto mb-32">
-          <Card className="bg-gradient-to-r from-primary-600 to-secondary-600 p-16 text-white shadow-strong">
-            <div className="text-center mb-12">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Icon.Lock className="w-10 h-10" />
-                <h3 className="text-4xl font-extrabold">
-                  בטיחות ואבטחה
-                </h3>
-              </div>
-              <p className="text-xl text-blue-100 font-medium">
-                אנחנו לוקחים את האבטחה והפרטיות שלך ברצינות
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <div>
-                <Icon.Dragon className="w-16 h-16 mx-auto mb-4" />
-                <h4 className="text-xl font-bold mb-2">הצפנה מלאה</h4>
-                <p className="text-blue-100">כל הנתונים מוצפנים ומאובטחים</p>
-              </div>
-              <div>
-                <Icon.User className="w-16 h-16 mx-auto mb-4" />
-                <h4 className="text-xl font-bold mb-2">אנונימיות מובטחת</h4>
-                <p className="text-blue-100">הזהות שלך נשארת פרטית תמיד</p>
-              </div>
-              <div>
-                <Icon.Check className="w-16 h-16 mx-auto mb-4" />
-                <h4 className="text-xl font-bold mb-2">מודרציה ידנית</h4>
-                <p className="text-blue-100">כל ביקורת נבדקת על ידי הצוות שלנו</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* CTA */}
-        <Card className="text-center bg-gradient-to-r from-primary-600 to-secondary-600 p-16 max-w-5xl mx-auto shadow-strong mb-32">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Icon.Dragon className="w-12 h-12 text-white" />
-            <h3 className="text-4xl font-extrabold text-white">
-              מוכן להתחיל?
-            </h3>
-          </div>
-          <p className="text-xl text-blue-100 mb-8 font-medium">
-            הצטרף לקהילת השוכרים שבונים יחד מאגר ביקורות אמיתי על דירות בישראל
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link
-              to="/search"
-              className="px-12 py-5 bg-white text-primary-600 rounded-2xl text-xl font-extrabold hover:bg-gray-50 transition-all shadow-medium transform hover:scale-105 inline-flex items-center gap-2"
-            >
-              <Icon.Search />
-              חפש דירה
-            </Link>
-            <Link
-              to="/write-review"
-              className="px-12 py-5 bg-accent-600 text-white rounded-2xl text-xl font-extrabold hover:bg-accent-700 transition-all shadow-medium transform hover:scale-105 inline-flex items-center gap-2"
-            >
-              <Icon.Edit />
-              כתוב ביקורת
-            </Link>
-          </div>
-          <p className="text-blue-200 text-sm mt-6 flex items-center justify-center gap-3 flex-wrap">
-            <span className="flex items-center gap-1"><Icon.Lock className="w-4 h-4" /> אנונימי לחלוטין</span>
-            <span>•</span>
-            <span className="flex items-center gap-1"><Icon.Heart className="w-4 h-4" /> חינם לגמרי</span>
-            <span>•</span>
-            <span className="flex items-center gap-1"><Icon.Check className="w-4 h-4" /> ללא קשר לבעלי דירות</span>
-          </p>
-        </Card>
       </main>
 
       <Footer />
