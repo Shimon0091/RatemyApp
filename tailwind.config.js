@@ -48,10 +48,33 @@ export default {
           700: '#404040',
           800: '#262626',
           900: '#171717',
-        }
+        },
+
+        // ── "warm-trust" design system (additive — approved mockup F) ──
+        // Deep-merges with Tailwind defaults; existing primary/secondary/accent
+        // scales are untouched so the other pages keep building.
+        petrol: {
+          DEFAULT: '#0E5A54',
+          700: '#0B4842',
+          600: '#0E5A54',
+          500: '#137168',
+          50: '#E7F1EF',
+        },
+        amber: {
+          DEFAULT: '#E0982E',
+          600: '#C9831F',
+          100: '#FBEBD0',
+        },
+        canvas: '#FAF8F4',
+        alt: '#F3EFE8',
+        sand: '#F3EFE8',
+        ink: '#15211F',
+        muted: '#5B6B66',
       },
       fontFamily: {
         sans: ['Heebo', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['Heebo', 'system-ui', 'sans-serif'],
+        body: ['Assistant', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1rem' }],
@@ -78,6 +101,10 @@ export default {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
         'medium': '0 4px 20px -2px rgba(0, 0, 0, 0.12), 0 10px 40px -3px rgba(0, 0, 0, 0.1)',
         'strong': '0 10px 40px -3px rgba(0, 0, 0, 0.2), 0 20px 60px -5px rgba(0, 0, 0, 0.15)',
+        // warm-trust system
+        'card': '0 8px 30px -12px rgba(21,33,31,0.18)',
+        'lift': '0 22px 48px -18px rgba(14,90,84,0.35)',
+        'bar':  '0 18px 50px -20px rgba(21,33,31,0.35)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

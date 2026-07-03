@@ -67,26 +67,25 @@ export default function Header() {
       {/* Skip to main content link for accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-500 focus:text-white focus:rounded-lg focus:shadow-strong"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-petrol focus:text-white focus:rounded-lg focus:shadow-strong"
       >
         {t('common.skipToMain')}
       </a>
 
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/5 font-body">
+        <div className="max-w-7xl mx-auto px-5 lg:px-8 py-3.5">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <Icon.Dragon className="text-primary-500" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
-              <p className="text-sm text-gray-600">{t('app.tagline')}</p>
-            </div>
+          <Link to="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
+            <span className="grid place-items-center w-9 h-9 rounded-xl bg-petrol text-white shadow-sm">
+              <Icon.Home className="w-5 h-5" />
+            </span>
+            <span className="text-2xl font-heading font-extrabold tracking-tight text-ink">{t('app.name')}</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/about" className="text-gray-700 hover:text-primary-500 transition-colors font-medium">
+          <nav className="hidden md:flex items-center gap-6 text-[15px] font-medium text-muted">
+            <Link to="/about" className="hover:text-petrol transition-colors">
               {t('nav.about')}
             </Link>
 
@@ -94,7 +93,7 @@ export default function Header() {
               <>
                 <Link
                   to="/write-review"
-                  className="text-gray-700 hover:text-primary-500 transition-colors font-medium"
+                  className="hover:text-petrol transition-colors"
                 >
                   {t('nav.writeReview')}
                 </Link>
@@ -103,7 +102,7 @@ export default function Header() {
                 {isAdmin && (
                   <Link
                     to="/admin"
-                    className="flex items-center gap-2 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors font-medium"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-100/70 transition-colors font-medium"
                   >
                     <Icon.Settings className="w-4 h-4" />
                     {t('nav.admin')}
@@ -116,7 +115,7 @@ export default function Header() {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-petrol-50 rounded-full flex items-center justify-center">
                       {user.user_metadata?.avatar_url ? (
                         <img
                           src={user.user_metadata.avatar_url}
@@ -124,7 +123,7 @@ export default function Header() {
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
-                        <span className="text-primary-600 font-bold">
+                        <span className="text-petrol font-bold">
                           {user.email?.[0].toUpperCase()}
                         </span>
                       )}
@@ -169,7 +168,7 @@ export default function Header() {
             ) : (
               <Link
                 to="/login"
-                className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium shadow-soft hover:shadow-medium"
+                className="btn inline-flex items-center rounded-full bg-amber text-white px-5 py-2 text-sm font-bold shadow-[0_6px_18px_-6px_rgba(224,152,46,0.7)] hover:bg-amber-600 transition-colors"
               >
                 {t('nav.login')}
               </Link>
@@ -239,7 +238,7 @@ export default function Header() {
               ) : (
                 <Link
                   to="/login"
-                  className="text-center px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+                  className="text-center px-6 py-2 bg-amber text-white rounded-full hover:bg-amber-600 transition-colors font-bold"
                   onClick={() => setShowMobileMenu(false)}
                 >
                   {t('nav.login')}

@@ -7,103 +7,67 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white mt-auto">
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo & Description */}
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center shadow-medium">
-                <Icon.Dragon className="text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">{t('app.name')}</h2>
-                <p className="text-gray-400 text-sm">{t('app.tagline')}</p>
-              </div>
+    <footer className="bg-petrol-700 text-white mt-auto font-body">
+      <div className="max-w-6xl mx-auto px-5 lg:px-8 py-16">
+        <div className="grid md:grid-cols-4 gap-10">
+          {/* Brand & Description */}
+          <div className="md:col-span-1">
+            <div className="flex items-center gap-2.5">
+              <span className="grid place-items-center w-9 h-9 rounded-xl bg-white/10">
+                <Icon.Home className="w-[18px] h-[18px]" />
+              </span>
+              <span className="text-2xl font-heading font-extrabold">{t('app.name')}</span>
             </div>
-            <p className="text-gray-400 leading-relaxed">
+            <p className="mt-4 text-white/70 leading-relaxed text-sm">
               {t('footer.description')}
             </p>
+            <div className="flex gap-3 mt-5">
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="אינסטגרם" className="btn grid place-items-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="3.5" /><path d="M17.5 6.5h.01" /></svg>
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="פייסבוק" className="btn grid place-items-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9h3V6h-3c-2 0-3.5 1.5-3.5 3.5V11H8v3h2.5v7h3v-7H16l.5-3h-3V9.5c0-.3.2-.5.5-.5Z" /></svg>
+              </a>
+              <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X" className="btn grid place-items-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h3l-7 8 8 12h-6l-5-7-6 7H2l8-9L2 2h6l4 6 6-6Zm-2 18h1.5L8 4H6.5L16 20Z" /></svg>
+              </a>
+            </div>
           </div>
-          
-          {/* Quick Links */}
+
+          {/* Product / Quick links */}
           <div>
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <Icon.ArrowRight className="w-5 h-5 text-primary-400" />
-              {t('footer.quickLinks')}
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <Icon.Home className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
-                  {t('nav.home')}
-                </Link>
-              </li>
-              <li>
-                <Link to="/search" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <Icon.Search className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
-                  {t('footer.searchProperties')}
-                </Link>
-              </li>
-              <li>
-                <Link to="/write-review" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <Icon.Edit className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
-                  {t('nav.writeReview')}
-                </Link>
-              </li>
-              <li>
-                <Link to="/login" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <Icon.User className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
-                  {t('nav.login')}
-                </Link>
-              </li>
+            <h4 className="font-heading font-bold mb-4">{t('footer.quickLinks')}</h4>
+            <ul className="space-y-2.5 text-sm text-white/70">
+              <li><Link to="/" className="hover:text-white transition-colors">{t('nav.home')}</Link></li>
+              <li><Link to="/search" className="hover:text-white transition-colors">{t('footer.searchProperties')}</Link></li>
+              <li><Link to="/write-review" className="hover:text-white transition-colors">{t('nav.writeReview')}</Link></li>
+              <li><Link to="/login" className="hover:text-white transition-colors">{t('nav.login')}</Link></li>
             </ul>
           </div>
 
-          {/* Contact & Legal */}
+          {/* Company / About */}
           <div>
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <Icon.FileText className="w-5 h-5 text-primary-400" />
-              {t('footer.information')}
-            </h3>
-            <ul className="space-y-3">
-              <li>
-                <Link to="/terms" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <Icon.FileCheck className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
-                  {t('footer.terms')}
-                </Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <Icon.Lock className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
-                  {t('footer.privacy')}
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <Icon.MessageCircle className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
-                  {t('footer.contact')}
-                </Link>
-              </li>
-              <li>
-                <Link to="/faq" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
-                  <Icon.Alert className="w-4 h-4 text-gray-600 group-hover:text-primary-400 transition-colors" />
-                  {t('footer.faq')}
-                </Link>
-              </li>
+            <h4 className="font-heading font-bold mb-4">{t('nav.about')}</h4>
+            <ul className="space-y-2.5 text-sm text-white/70">
+              <li><Link to="/about" className="hover:text-white transition-colors">{t('nav.about')}</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">{t('footer.faq')}</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link></li>
+            </ul>
+          </div>
+
+          {/* Legal / Information */}
+          <div>
+            <h4 className="font-heading font-bold mb-4">{t('footer.information')}</h4>
+            <ul className="space-y-2.5 text-sm text-white/70">
+              <li><Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link></li>
+              <li><Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link></li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-          <p className="text-gray-400 text-sm">
-            © {currentYear} {t('app.name')}. {t('footer.allRights')}
-          </p>
-          <p className="text-gray-500 text-xs mt-2 flex items-center justify-center gap-1">
-            <Icon.Heart className="w-4 h-4 text-red-400" />
-            {t('footer.builtWith')}
-          </p>
+        <div className="mt-12 pt-6 border-t border-white/10 text-white/60 text-sm text-center">
+          © {currentYear} {t('app.name')}. {t('footer.allRights')}
         </div>
       </div>
     </footer>
