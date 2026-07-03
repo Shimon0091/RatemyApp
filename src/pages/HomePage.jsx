@@ -5,7 +5,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import CountUp from '../components/CountUp'
 import { useScrollReveal } from '../hooks/useScrollReveal'
-import { getTopRatedProperties } from '../lib/database'
+import { getTopRatedProperties, getNeighborhoods } from '../lib/database'
 import { supabase } from '../lib/supabase'
 import { logger } from '../utils/logger'
 
@@ -48,7 +48,7 @@ export default function HomePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [topProperties, setTopProperties] = useState([])
-  const [stats, setStats] = useState({ totalReviews: 0, totalProperties: 0, neighborhoods: 12 })
+  const [stats, setStats] = useState({ totalReviews: 0, totalProperties: 0, neighborhoods: 0 })
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
 
@@ -73,13 +73,16 @@ export default function HomePage() {
         .from('properties')
         .select('*', { count: 'exact', head: true })
 
+      // Real distinct-neighborhoods count (no invented number).
+      const { data: neighborhoods } = await getNeighborhoods()
+
       if (reviewsError) logger.error('Error loading reviews:', reviewsError)
       if (propertiesError) logger.error('Error loading properties:', propertiesError)
 
       setStats({
         totalReviews: reviewsCount || 0,
         totalProperties: propertiesCount || 0,
-        neighborhoods: 12,
+        neighborhoods: Array.isArray(neighborhoods) ? neighborhoods.length : 0,
       })
     } catch (err) {
       logger.error('Error loading data:', err)
