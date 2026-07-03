@@ -232,7 +232,7 @@ export default function ReviewCard({ review }) {
           {!reported && (
             <button
               onClick={() => setShowReportModal(true)}
-              className="flex items-center gap-1 text-sm text-muted/70 hover:text-red-600 transition-colors"
+              className="flex items-center gap-1 text-sm text-muted hover:text-red-600 transition-colors"
               title={t('reviewCard.reportTitle')}
             >
               <Icon.Flag className="w-4 h-4" />
@@ -240,7 +240,7 @@ export default function ReviewCard({ review }) {
             </button>
           )}
           {reported && (
-            <span className="flex items-center gap-1 text-sm text-muted/70">
+            <span className="flex items-center gap-1 text-sm text-muted">
               <Icon.Check className="w-4 h-4" />
               {t('reviewCard.reported')}
             </span>

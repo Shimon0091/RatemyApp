@@ -206,7 +206,7 @@ export default function SearchResultsPage() {
               </div>
               <button
                 type="submit"
-                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
               >
                 <LineSearch width="18" height="18" />
                 {t('search.searchProperties')}
@@ -228,7 +228,7 @@ export default function SearchResultsPage() {
               <LineFilter width="18" height="18" className="text-petrol" />
               {t('filters.title')}
               {activeFilterCount > 0 && (
-                <span className="grid place-items-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-amber text-white text-xs font-bold">
+                <span className="grid place-items-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-amber-cta text-white text-xs font-bold">
                   {activeFilterCount}
                 </span>
               )}
@@ -422,7 +422,7 @@ export default function SearchResultsPage() {
                   </p>
                   <button
                     onClick={() => navigate('/write-review')}
-                    className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                    className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
                   >
                     <LineEdit width="18" height="18" />
                     כתבו ביקורת ראשונה

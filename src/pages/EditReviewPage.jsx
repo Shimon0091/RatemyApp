@@ -336,7 +336,7 @@ export default function EditReviewPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-5 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 disabled:opacity-50 disabled:shadow-none"
+                className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-5 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 disabled:opacity-50 disabled:shadow-none"
               >
                 {submitting ? (
                   <>

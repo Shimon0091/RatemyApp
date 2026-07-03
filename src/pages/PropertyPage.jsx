@@ -201,7 +201,7 @@ export default function PropertyPage() {
 
               <button
                 onClick={() => navigate('/write-review')}
-                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 shrink-0"
+                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 shrink-0"
               >
                 <LineEdit width="18" height="18" />
                 {t('nav.writeReview')}
@@ -285,7 +285,7 @@ export default function PropertyPage() {
                 <p className="mt-2 text-muted max-w-md mx-auto">{t('property.beFirst')}</p>
                 <button
                   onClick={() => navigate('/write-review')}
-                  className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                  className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
                 >
                   <LineEdit width="18" height="18" />
                   {t('property.writeFirstReview')}
@@ -368,7 +368,7 @@ export default function PropertyPage() {
             </p>
             <button
               onClick={() => navigate('/write-review')}
-              className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+              className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
             >
               <LineEdit width="18" height="18" />
               כתבו את הביקורת הראשונה
@@ -386,7 +386,7 @@ export default function PropertyPage() {
             <p className="mt-3 text-white/80 max-w-2xl mx-auto text-lg">{t('property.shareExperience')}</p>
             <button
               onClick={() => navigate('/write-review')}
-              className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+              className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
             >
               {t('property.writeReviewCta')}
               <LineArrowLeft width="18" height="18" />

@@ -61,8 +61,9 @@ export default {
           50: '#E7F1EF',
         },
         amber: {
-          DEFAULT: '#E0982E',
-          600: '#C9831F',
+          DEFAULT: '#E0982E',   // bright — decorative only (stars, dots, accents)
+          cta: '#8F5200',       // a11y: white text on filled buttons/CTAs → 6.22:1
+          600: '#7A4A00',       // a11y: text on amber-100 badges → 6.38:1; button hover → 7.48:1
           100: '#FBEBD0',
         },
         canvas: '#FAF8F4',

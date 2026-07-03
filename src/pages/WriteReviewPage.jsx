@@ -371,7 +371,7 @@ export default function WriteReviewPage() {
 
             <button
               onClick={() => navigate('/login', { state: { from: '/write-review' } })}
-              className="btn w-full mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+              className="btn w-full mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
             >
               התחברו כדי לכתוב ביקורת
             </button>
@@ -409,7 +409,7 @@ export default function WriteReviewPage() {
                           isCompleted
                             ? 'bg-petrol text-white'
                             : isActive
-                            ? 'bg-amber text-white shadow-lift'
+                            ? 'bg-amber-cta text-white shadow-lift'
                             : 'bg-white border border-black/10 text-muted'
                         }`}
                       >
@@ -664,7 +664,7 @@ export default function WriteReviewPage() {
                     <LineArrowRight width="18" height="18" />
                     חזרה
                   </button>
-                  <button type="submit" disabled={isSubmitting} className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 disabled:opacity-50 disabled:shadow-none">
+                  <button type="submit" disabled={isSubmitting} className="btn flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 disabled:opacity-50 disabled:shadow-none">
                     {isSubmitting ? (
                       <>
                         <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />

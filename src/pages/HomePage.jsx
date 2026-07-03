@@ -187,7 +187,7 @@ export default function HomePage() {
               </div>
               <button
                 type="submit"
-                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
               >
                 <IconSearch width="18" height="18" />
                 חפש ביקורות
@@ -215,7 +215,7 @@ export default function HomePage() {
               </div>
               <Link
                 to="/write-review"
-                className="btn mt-5 inline-flex items-center gap-2 rounded-xl bg-amber text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                className="btn mt-5 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
               >
                 {t('hero.ctaWrite')}
                 <IconArrowLeft width="18" height="18" />
@@ -295,7 +295,7 @@ export default function HomePage() {
                     <span className="grid place-items-center w-16 h-16 rounded-2xl bg-petrol-50 text-petrol">
                       <step.Icon width="28" height="28" />
                     </span>
-                    <span className="absolute -top-2 -left-2 grid place-items-center w-7 h-7 rounded-full bg-amber text-white text-xs font-bold">
+                    <span className="absolute -top-2 -left-2 grid place-items-center w-7 h-7 rounded-full bg-amber-cta text-white text-xs font-bold">
                       {step.n}
                     </span>
                   </div>

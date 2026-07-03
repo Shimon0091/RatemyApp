@@ -99,7 +99,7 @@ export default function AboutPage() {
             <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 to="/search"
-                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
               >
                 <LineSearch width="18" height="18" /> חפשו דירה
               </Link>

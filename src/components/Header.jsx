@@ -168,7 +168,7 @@ export default function Header() {
             ) : (
               <Link
                 to="/login"
-                className="btn inline-flex items-center rounded-full bg-amber text-white px-5 py-2 text-sm font-bold shadow-[0_6px_18px_-6px_rgba(224,152,46,0.7)] hover:bg-amber-600 transition-colors"
+                className="btn inline-flex items-center rounded-full bg-amber-cta text-white px-5 py-2 text-sm font-bold shadow-[0_6px_18px_-6px_rgba(224,152,46,0.7)] hover:bg-amber-600 transition-colors"
               >
                 {t('nav.login')}
               </Link>
@@ -238,7 +238,7 @@ export default function Header() {
               ) : (
                 <Link
                   to="/login"
-                  className="text-center px-6 py-2 bg-amber text-white rounded-full hover:bg-amber-600 transition-colors font-bold"
+                  className="text-center px-6 py-2 bg-amber-cta text-white rounded-full hover:bg-amber-600 transition-colors font-bold"
                   onClick={() => setShowMobileMenu(false)}
                 >
                   {t('nav.login')}

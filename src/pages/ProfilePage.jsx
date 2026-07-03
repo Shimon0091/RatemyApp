@@ -139,7 +139,7 @@ export default function ProfilePage() {
                   <span>{user.email?.[0].toUpperCase()}</span>
                 )}
               </div>
-              <span className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-full bg-amber text-white shadow">
+              <span className="absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-full bg-amber-cta text-white shadow">
                 <LineBadgeCheck width="16" height="16" />
               </span>
             </div>
@@ -187,7 +187,7 @@ export default function ProfilePage() {
             </h2>
             <button
               onClick={() => navigate('/write-review')}
-              className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-5 py-2.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+              className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-5 py-2.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
             >
               <LineEdit width="18" height="18" /> {t('profile.writeNew')}
             </button>
@@ -289,7 +289,7 @@ export default function ProfilePage() {
               <p className="text-muted max-w-md mx-auto mb-6">{t('profile.startWriting')}</p>
               <button
                 onClick={() => navigate('/write-review')}
-                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
               >
                 <LineEdit width="18" height="18" /> {t('profile.writeFirstReview')}
               </button>
