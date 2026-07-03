@@ -3,14 +3,13 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import RatingStars from '../components/RatingStars'
 import Pagination from '../components/Pagination'
+import { useScrollReveal } from '../hooks/useScrollReveal'
 import { searchProperties, getNeighborhoods } from '../lib/database'
-import Icon from '../components/icons'
-import { Button } from '../components/ui/Button'
-import { Card, CardBody } from '../components/ui/Card'
-import { Badge } from '../components/ui/Badge'
-import { LoadingSpinner } from '../components/ui/LoadingSpinner'
+import {
+  LinePin, LineStarSolid, LineSearch, LineFilter, LineBuilding,
+  LineArrowLeft, LineEdit, LineAlert, LineX, LineCheck,
+} from '../components/icons/line'
 
 // Timeout wrapper for async operations
 function withTimeout(promise, ms) {
@@ -27,6 +26,7 @@ export default function SearchResultsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
+  const [queryInput, setQueryInput] = useState(query)
 
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
@@ -42,6 +42,8 @@ export default function SearchResultsPage() {
   const [sortBy, setSortBy] = useState('overall_rating')
   const [neighborhoods, setNeighborhoods] = useState([])
   const [showFilters, setShowFilters] = useState(false)
+
+  useEffect(() => { setQueryInput(query) }, [query])
 
   // Load neighborhoods on mount
   useEffect(() => {
@@ -104,6 +106,9 @@ export default function SearchResultsPage() {
     return () => { cancelled = true }
   }, [query, minRating, neighborhood, minReviews, sortBy, currentPage, t])
 
+  // Re-scan reveal targets whenever the result set changes.
+  useScrollReveal([loading, properties.length, showFilters])
+
   const retrySearch = useCallback(() => {
     setError('')
     setLoading(true)
@@ -123,6 +128,13 @@ export default function SearchResultsPage() {
       .finally(() => setLoading(false))
   }, [query, minRating, neighborhood, minReviews, sortBy, currentPage, t])
 
+  const handleSubmitSearch = (e) => {
+    e.preventDefault()
+    setCurrentPage(1)
+    const next = queryInput.trim()
+    setSearchParams(next ? { q: next } : {})
+  }
+
   const handlePageChange = (page) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -137,6 +149,7 @@ export default function SearchResultsPage() {
   }
 
   const hasActiveFilters = minRating || neighborhood || minReviews || sortBy !== 'overall_rating'
+  const activeFilterCount = [minRating, neighborhood, minReviews].filter(Boolean).length
 
   const getPositiveTags = (property) => {
     const tags = []
@@ -146,85 +159,107 @@ export default function SearchResultsPage() {
     return tags.slice(0, 2)
   }
 
+  const selectClass =
+    'w-full rounded-xl bg-canvas border border-black/10 px-4 py-2.5 text-[15px] text-ink ' +
+    'outline-none transition-colors focus:border-petrol focus:ring-2 focus:ring-petrol/20 cursor-pointer'
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+    <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <Card className="mb-8 shadow-soft">
-          <CardBody className="p-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <Icon.Search className="w-8 h-8 text-primary-600" />
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    {query ? t('search.results') : 'כל הדירות'}
-                  </h1>
-                </div>
-                <p className="text-gray-600 text-lg">
-                  {query ? (
-                    <>{t('search.found')} <span className="font-bold text-primary-600">{loading ? '...' : totalCount}</span> {t('search.propertiesFor')} <span className="font-semibold text-gray-900">"{query}"</span></>
-                  ) : (
-                    <>{loading ? '...' : totalCount} דירות מדורגות – חפשו כתובת או עיינו ברשימה</>
-                  )}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
-              >
-                <Icon.Filter />
-                {t('filters.title')}
-                {hasActiveFilters && (
-                  <Badge variant="primary" className="ml-2">
-                    {[minRating, neighborhood, minReviews].filter(Boolean).length}
-                  </Badge>
-                )}
-              </Button>
-            </div>
-          </CardBody>
-        </Card>
+      <main id="main-content" className="flex-1">
+        {/* ============ SEARCH HEADER BAND ============ */}
+        <section className="bg-petrol text-white">
+          <div className="max-w-6xl mx-auto px-5 lg:px-8 pt-12 pb-10 lg:pt-14 lg:pb-12">
+            <h1 className="font-heading font-black text-3xl lg:text-4xl leading-tight">
+              {query ? t('search.results') : 'כל הדירות'}
+            </h1>
+            <p className="mt-2.5 text-white/80 text-base lg:text-lg">
+              {query ? (
+                <>
+                  {t('search.found')}{' '}
+                  <span className="font-bold text-white">{loading ? '…' : totalCount.toLocaleString('he-IL')}</span>{' '}
+                  {t('search.propertiesFor')}{' '}
+                  <span className="font-bold text-amber">"{query}"</span>
+                </>
+              ) : (
+                <>{loading ? '…' : totalCount.toLocaleString('he-IL')} דירות מדורגות — חפשו כתובת או עיינו ברשימה</>
+              )}
+            </p>
 
-        {/* Filters Panel */}
-        {showFilters && (
-          <Card className="mb-8 shadow-medium">
-            <CardBody className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Min Rating */}
+            {/* search bar */}
+            <form
+              onSubmit={handleSubmitSearch}
+              className="mt-6 max-w-2xl bg-white rounded-2xl shadow-bar p-2 flex flex-col sm:flex-row gap-2"
+            >
+              <div className="flex-1 flex items-center gap-2 px-4 rounded-xl bg-canvas">
+                <LinePin className="text-muted shrink-0" width="20" height="20" />
+                <input
+                  type="text"
+                  value={queryInput}
+                  onChange={(e) => setQueryInput(e.target.value)}
+                  aria-label="חיפוש כתובת"
+                  placeholder="הכנס כתובת — לדוגמה: רוטשילד 45, תל אביב"
+                  className="w-full bg-transparent py-3 text-[15px] text-ink placeholder:text-muted/80 outline-none"
+                  dir="rtl"
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber text-white px-6 py-3 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+              >
+                <LineSearch width="18" height="18" />
+                {t('search.searchProperties')}
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <div className="max-w-6xl mx-auto px-5 lg:px-8 py-8 lg:py-10">
+          {/* Filters toggle */}
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <p className="text-muted text-sm hidden sm:block">
+              {!loading && `${totalCount.toLocaleString('he-IL')} תוצאות`}
+            </p>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="btn inline-flex items-center gap-2 rounded-full bg-white border border-black/5 shadow-sm px-5 py-2.5 font-semibold text-ink hover:shadow-card"
+            >
+              <LineFilter width="18" height="18" className="text-petrol" />
+              {t('filters.title')}
+              {activeFilterCount > 0 && (
+                <span className="grid place-items-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-amber text-white text-xs font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="mb-8 bg-white rounded-2xl shadow-card border border-black/5 p-6 animate-slide-down">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('filters.minRating')}
-                  </label>
+                  <label className="block text-sm font-semibold text-ink mb-2">{t('filters.minRating')}</label>
                   <select
                     value={minRating || ''}
-                    onChange={(e) => {
-                      setMinRating(e.target.value ? Number(e.target.value) : null)
-                      setCurrentPage(1)
-                    }}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
+                    onChange={(e) => { setMinRating(e.target.value ? Number(e.target.value) : null); setCurrentPage(1) }}
+                    className={selectClass}
                   >
                     <option value="">{t('filters.anyReviews')}</option>
-                    <option value="4">4+ ⭐</option>
-                    <option value="3">3+ ⭐</option>
-                    <option value="2">2+ ⭐</option>
-                    <option value="1">1+ ⭐</option>
+                    <option value="4">4+ ★</option>
+                    <option value="3">3+ ★</option>
+                    <option value="2">2+ ★</option>
+                    <option value="1">1+ ★</option>
                   </select>
                 </div>
 
-                {/* Neighborhood */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('filters.neighborhood')}
-                  </label>
+                  <label className="block text-sm font-semibold text-ink mb-2">{t('filters.neighborhood')}</label>
                   <select
                     value={neighborhood || ''}
-                    onChange={(e) => {
-                      setNeighborhood(e.target.value || null)
-                      setCurrentPage(1)
-                    }}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
+                    onChange={(e) => { setNeighborhood(e.target.value || null); setCurrentPage(1) }}
+                    className={selectClass}
                   >
                     <option value="">{t('filters.allNeighborhoods')}</option>
                     {neighborhoods.map((n) => (
@@ -233,18 +268,12 @@ export default function SearchResultsPage() {
                   </select>
                 </div>
 
-                {/* Min Reviews */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('filters.minReviews')}
-                  </label>
+                  <label className="block text-sm font-semibold text-ink mb-2">{t('filters.minReviews')}</label>
                   <select
                     value={minReviews || ''}
-                    onChange={(e) => {
-                      setMinReviews(e.target.value ? Number(e.target.value) : null)
-                      setCurrentPage(1)
-                    }}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
+                    onChange={(e) => { setMinReviews(e.target.value ? Number(e.target.value) : null); setCurrentPage(1) }}
+                    className={selectClass}
                   >
                     <option value="">{t('filters.anyReviews')}</option>
                     <option value="10">10+</option>
@@ -253,18 +282,12 @@ export default function SearchResultsPage() {
                   </select>
                 </div>
 
-                {/* Sort By */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('filters.sortBy')}
-                  </label>
+                  <label className="block text-sm font-semibold text-ink mb-2">{t('filters.sortBy')}</label>
                   <select
                     value={sortBy}
-                    onChange={(e) => {
-                      setSortBy(e.target.value)
-                      setCurrentPage(1)
-                    }}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
+                    onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1) }}
+                    className={selectClass}
                   >
                     <option value="overall_rating">{t('property.sortHighRating')}</option>
                     <option value="total_reviews">{t('property.sortHelpful')}</option>
@@ -274,161 +297,155 @@ export default function SearchResultsPage() {
               </div>
 
               {hasActiveFilters && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <Button variant="ghost" onClick={handleClearFilters} className="flex items-center gap-2">
-                    <Icon.XCircle />
+                <div className="mt-5 pt-5 border-t border-black/5">
+                  <button
+                    onClick={handleClearFilters}
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted hover:text-petrol transition-colors"
+                  >
+                    <LineX width="16" height="16" />
                     {t('filters.clear')}
-                  </Button>
+                  </button>
                 </div>
               )}
-            </CardBody>
-          </Card>
-        )}
+            </div>
+          )}
 
-        {/* Loading */}
-        {loading && (
-          <Card className="shadow-soft">
-            <CardBody className="text-center py-16">
-              <LoadingSpinner size="xl" />
-              <div className="text-xl text-gray-600 mt-4">{t('search.searching')}</div>
-            </CardBody>
-          </Card>
-        )}
+          {/* Loading */}
+          {loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-card border border-black/5 overflow-hidden animate-pulse">
+                  <div className="h-44 bg-[#EFEDE8]" />
+                  <div className="p-6 space-y-3">
+                    <div className="h-5 w-2/3 bg-canvas rounded" />
+                    <div className="h-4 w-1/2 bg-canvas rounded" />
+                    <div className="h-9 w-full bg-canvas rounded-xl mt-4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-        {/* Error */}
-        {error && (
-          <Card className="shadow-soft bg-red-50 border-2 border-red-200 mb-8">
-            <CardBody className="p-6 text-center">
-              <Icon.Alert className="w-12 h-12 text-red-600 mx-auto mb-3" />
-              <div className="text-red-700 font-medium mb-4">{error}</div>
-              <Button variant="outline" onClick={retrySearch}>
+          {/* Error */}
+          {error && !loading && (
+            <div className="bg-white rounded-2xl shadow-card border border-red-100 p-8 text-center max-w-lg mx-auto">
+              <span className="grid place-items-center w-14 h-14 mx-auto rounded-2xl bg-red-50 text-red-600">
+                <LineAlert width="26" height="26" />
+              </span>
+              <p className="mt-4 text-ink font-semibold">{error}</p>
+              <button
+                onClick={retrySearch}
+                className="btn mt-5 inline-flex items-center gap-2 rounded-xl bg-petrol text-white px-6 py-3 font-bold hover:bg-petrol-700"
+              >
                 נסו שוב
-              </Button>
-            </CardBody>
-          </Card>
-        )}
+              </button>
+            </div>
+          )}
 
-        {/* Results */}
-        {!loading && !error && (
-          <>
-            {properties.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {properties.map((property) => (
-                  <Link
-                    key={property.id}
-                    to={`/property/${property.id}`}
-                    className="block group"
-                  >
-                    <Card className="h-full shadow-soft hover:shadow-strong transition-all duration-300 border-2 border-transparent hover:border-primary-200 transform hover:-translate-y-1">
-                      <CardBody className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-start gap-2 mb-2">
-                              <Icon.MapPin className="w-5 h-5 text-primary-500 mt-0.5 flex-shrink-0" />
-                              <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary-600 transition-colors">
-                                {property.street} {property.building_number}
-                              </h3>
-                            </div>
-                            <p className="text-sm text-gray-600 flex items-center gap-1">
-                              <Icon.Building className="w-4 h-4" />
-                              {t('property.floor')} {property.floor}, {t('property.apartment')} {property.apartment} | {property.city}
-                            </p>
+          {/* Results */}
+          {!loading && !error && (
+            <>
+              {properties.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {properties.map((property, i) => (
+                      <Link
+                        key={property.id}
+                        to={`/property/${property.id}`}
+                        className="reveal lift group bg-white rounded-2xl shadow-card border border-black/5 overflow-hidden flex flex-col"
+                      >
+                        {/* uniform gray placeholder — no photo field in DB yet */}
+                        <div className="relative h-44 grid place-items-center bg-[#EFEDE8]">
+                          <div className="text-center text-muted">
+                            <LineBuilding className="mx-auto" width="32" height="32" />
+                            <span className="block mt-1.5 text-sm font-medium">אין תמונה</span>
                           </div>
                           {property.overall_rating > 0 && (
-                            <Badge variant="warning" className="flex items-center gap-1 px-2 py-1">
-                              <Icon.Star className="w-4 h-4 fill-current" />
-                              <span className="font-bold">
-                                {property.overall_rating?.toFixed(1)}
-                              </span>
-                            </Badge>
+                            <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur text-amber-600 px-2.5 py-1 text-sm font-bold shadow-sm">
+                              <LineStarSolid className="text-amber" width="14" height="14" />
+                              {property.overall_rating.toFixed(1)}
+                            </span>
                           )}
                         </div>
 
-                        {property.overall_rating > 0 && (
-                          <div className="mb-4">
-                            <RatingStars rating={property.overall_rating} size="sm" />
+                        <div className="p-6 flex flex-col flex-1">
+                          <div className="flex items-start gap-2">
+                            <LinePin className="text-petrol shrink-0 mt-1" width="18" height="18" />
+                            <h3 className="font-heading font-bold text-lg text-ink leading-snug group-hover:text-petrol transition-colors">
+                              {property.street} {property.building_number}
+                            </h3>
                           </div>
-                        )}
+                          <p className="text-muted text-sm mt-1.5">
+                            {property.neighborhood ? `${property.neighborhood} · ` : ''}{property.city}
+                          </p>
+                          <p className="text-muted text-sm mt-1">
+                            {property.floor ? `קומה ${property.floor} · ` : ''}
+                            <span className="font-semibold text-ink">{property.total_reviews || 0}</span> {t('search.reviews')}
+                          </p>
 
-                        <div className="flex items-center justify-between text-sm mb-4">
-                          <div className="flex items-center gap-1 text-gray-600">
-                            <Icon.FileText className="w-4 h-4" />
-                            <span className="font-medium">{property.total_reviews || 0}</span> {t('search.reviews')}
-                          </div>
-                          {property.neighborhood && (
-                            <Badge variant="secondary">
-                              {property.neighborhood}
-                            </Badge>
+                          {getPositiveTags(property).length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-4">
+                              {getPositiveTags(property).map((tag) => (
+                                <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-petrol-50 text-petrol text-xs font-semibold px-3 py-1">
+                                  <LineCheck width="12" height="12" /> {tag}
+                                </span>
+                              ))}
+                            </div>
                           )}
+
+                          <span className="mt-5 pt-4 border-t border-black/5 inline-flex items-center justify-between text-petrol font-semibold text-sm">
+                            קרא ביקורות
+                            <LineArrowLeft width="16" height="16" className="transition-transform group-hover:-translate-x-1" />
+                          </span>
                         </div>
-
-                        {getPositiveTags(property).length > 0 && (
-                          <div className="flex gap-2 flex-wrap pt-4 border-t border-gray-100">
-                            {getPositiveTags(property).map((tag, index) => (
-                              <Badge
-                                key={index}
-                                variant="success"
-                                className="text-xs"
-                              >
-                                <Icon.Check className="w-3 h-3" />
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </CardBody>
-                    </Card>
-                  </Link>
-                ))}
-                </div>
-
-                {/* Pagination */}
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </>
-            ) : query ? (
-              <Card className="shadow-soft">
-                <CardBody className="text-center py-16">
-                  <div className="bg-primary-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Icon.Edit className="w-12 h-12 text-primary-600" />
+                      </Link>
+                    ))}
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </>
+              ) : query ? (
+                <div className="bg-white rounded-2xl shadow-card border border-black/5 p-10 md:p-14 text-center max-w-xl mx-auto">
+                  <span className="grid place-items-center w-16 h-16 mx-auto rounded-2xl bg-amber-100 text-amber-600">
+                    <LineEdit width="30" height="30" />
+                  </span>
+                  <h3 className="mt-6 font-heading font-extrabold text-2xl text-ink">
                     עדיין אין ביקורות על כתובת זו
                   </h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto text-lg">
-                    לא נמצאו ביקורות עבור "{query}".
-                    <br />
-                    גרת בכתובת הזו? היה הראשון לשתף את החוויה שלך!
+                  <p className="mt-3 text-muted leading-relaxed">
+                    לא נמצאו ביקורות עבור "{query}".<br />
+                    גרתם בכתובת הזו? היו הראשונים לשתף את החוויה שלכם.
                   </p>
-                  <Button onClick={() => navigate('/write-review')} size="lg">
-                    <Icon.Edit />
-                    כתוב ביקורת ראשונה
-                  </Button>
-                </CardBody>
-              </Card>
-            ) : (
-              <Card className="shadow-soft">
-                <CardBody className="text-center py-16">
-                  <div className="bg-primary-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Icon.Search className="w-12 h-12 text-primary-600" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  <button
+                    onClick={() => navigate('/write-review')}
+                    className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                  >
+                    <LineEdit width="18" height="18" />
+                    כתבו ביקורת ראשונה
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl shadow-card border border-black/5 p-10 md:p-14 text-center max-w-xl mx-auto">
+                  <span className="grid place-items-center w-16 h-16 mx-auto rounded-2xl bg-petrol-50 text-petrol">
+                    <LineSearch width="30" height="30" />
+                  </span>
+                  <h3 className="mt-6 font-heading font-extrabold text-2xl text-ink">
                     {t('search.searchProperties')}
                   </h3>
-                  <p className="text-gray-600 max-w-md mx-auto">
+                  <p className="mt-3 text-muted leading-relaxed">
                     {t('search.useSearchBar')}
                   </p>
-                </CardBody>
-              </Card>
-            )}
-          </>
-        )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </main>
-      
+
       <Footer />
     </div>
   )
