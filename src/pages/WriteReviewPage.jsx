@@ -665,16 +665,16 @@ export default function WriteReviewPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <YesNo label="האם הפיקדון הוחזר במלואו?" value={depositReturned} onChange={setDepositReturned} />
-                    <YesNo label="האם בעל הבית עמד בתנאי החוזה?" value={contractRespected} onChange={setContractRespected} />
-                    <YesNo label="האם תיקונים בוצעו בזמן סביר?" value={repairsTimely} onChange={setRepairsTimely} />
+                    <YesNo label={t('writeReview.q.deposit')} value={depositReturned} onChange={setDepositReturned} />
+                    <YesNo label={t('writeReview.q.contract')} value={contractRespected} onChange={setContractRespected} />
+                    <YesNo label={t('writeReview.q.repairs')} value={repairsTimely} onChange={setRepairsTimely} />
                   </div>
 
                   <div className="space-y-4 pt-2">
                     <h3 className="font-heading font-bold text-lg text-ink">על השכונה</h3>
-                    <YesNo label="האם יש חניה זמינה באזור?" value={parkingAvailable} onChange={setParkingAvailable} />
-                    <YesNo label="האם השכנים נעימים?" value={niceNeighbors} onChange={setNiceNeighbors} />
-                    <YesNo label="האם יש חנויות ושירותים בקרבת מקום?" value={nearbyAmenities} onChange={setNearbyAmenities} />
+                    <YesNo label={t('writeReview.q.parking')} value={parkingAvailable} onChange={setParkingAvailable} />
+                    <YesNo label={t('writeReview.q.neighbors')} value={niceNeighbors} onChange={setNiceNeighbors} />
+                    <YesNo label={t('writeReview.q.amenities')} value={nearbyAmenities} onChange={setNearbyAmenities} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
