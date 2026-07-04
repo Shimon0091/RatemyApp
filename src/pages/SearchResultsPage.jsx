@@ -5,6 +5,7 @@ import Seo from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import Pagination from '../components/Pagination'
+import SearchBar from '../components/SearchBar'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 import { searchProperties, getNeighborhoods } from '../lib/database'
 import {
@@ -27,7 +28,6 @@ export default function SearchResultsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
-  const [queryInput, setQueryInput] = useState(query)
 
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
@@ -43,8 +43,6 @@ export default function SearchResultsPage() {
   const [sortBy, setSortBy] = useState('overall_rating')
   const [neighborhoods, setNeighborhoods] = useState([])
   const [showFilters, setShowFilters] = useState(false)
-
-  useEffect(() => { setQueryInput(query) }, [query])
 
   // Load neighborhoods on mount
   useEffect(() => {
@@ -129,10 +127,9 @@ export default function SearchResultsPage() {
       .finally(() => setLoading(false))
   }, [query, minRating, neighborhood, minReviews, sortBy, currentPage, t])
 
-  const handleSubmitSearch = (e) => {
-    e.preventDefault()
+  // Receives the trimmed query from SearchBar (submit or suggestion selection)
+  const handleSubmitSearch = (next) => {
     setCurrentPage(1)
-    const next = queryInput.trim()
     setSearchParams(next ? { q: next } : {})
   }
 
@@ -193,31 +190,14 @@ export default function SearchResultsPage() {
               )}
             </p>
 
-            {/* search bar */}
-            <form
-              onSubmit={handleSubmitSearch}
-              className="mt-6 max-w-2xl bg-white rounded-2xl shadow-bar p-2 flex flex-col sm:flex-row gap-2"
-            >
-              <div className="flex-1 flex items-center gap-2 px-4 rounded-xl bg-canvas">
-                <LinePin className="text-muted shrink-0" width="20" height="20" />
-                <input
-                  type="text"
-                  value={queryInput}
-                  onChange={(e) => setQueryInput(e.target.value)}
-                  aria-label="חיפוש כתובת"
-                  placeholder="הכנס כתובת — לדוגמה: רוטשילד 45, תל אביב"
-                  className="w-full bg-transparent py-3 text-[15px] text-ink placeholder:text-muted/80 outline-none"
-                  dir="rtl"
-                />
-              </div>
-              <button
-                type="submit"
-                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
-              >
-                <LineSearch width="18" height="18" />
-                {t('search.searchProperties')}
-              </button>
-            </form>
+            {/* search bar — shared component with Google Places autocomplete */}
+            <SearchBar
+              variant="compact"
+              className="mt-6 max-w-2xl"
+              buttonLabel={t('search.searchProperties')}
+              initialQuery={query}
+              onSearch={handleSubmitSearch}
+            />
           </div>
         </section>
 
