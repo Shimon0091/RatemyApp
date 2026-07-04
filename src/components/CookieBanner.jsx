@@ -1,28 +1,51 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  COOKIE_CONSENT_KEY,
+  CONSENT_ACCEPTED,
+  CONSENT_DECLINED,
+  CONSENT_EVENT,
+  CONSENT_OPEN_EVENT,
+} from '../lib/analytics'
 
-const COOKIE_KEY = 'diragon_cookie_consent'
+// Notify the app (useAnalytics) that the stored consent value changed.
+function notifyConsentChange() {
+  window.dispatchEvent(new Event(CONSENT_EVENT))
+}
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const consent = localStorage.getItem(COOKIE_KEY)
+    const consent = localStorage.getItem(COOKIE_CONSENT_KEY)
+    let timer
     if (!consent) {
       // Small delay so it doesn't flash on first render
-      const timer = setTimeout(() => setVisible(true), 800)
-      return () => clearTimeout(timer)
+      timer = setTimeout(() => setVisible(true), 800)
+    }
+
+    // Allow re-opening the banner at any time (e.g. footer "ניהול עוגיות"),
+    // so a user can review and withdraw a previously given consent — as easily
+    // as they gave it (Amendment 13 §8C).
+    const handleOpen = () => setVisible(true)
+    window.addEventListener(CONSENT_OPEN_EVENT, handleOpen)
+
+    return () => {
+      if (timer) clearTimeout(timer)
+      window.removeEventListener(CONSENT_OPEN_EVENT, handleOpen)
     }
   }, [])
 
   const handleAccept = () => {
-    localStorage.setItem(COOKIE_KEY, 'accepted')
+    localStorage.setItem(COOKIE_CONSENT_KEY, CONSENT_ACCEPTED)
     setVisible(false)
+    notifyConsentChange()
   }
 
   const handleDecline = () => {
-    localStorage.setItem(COOKIE_KEY, 'declined')
+    localStorage.setItem(COOKIE_CONSENT_KEY, CONSENT_DECLINED)
     setVisible(false)
+    notifyConsentChange()
   }
 
   if (!visible) return null
@@ -46,8 +69,7 @@ export default function CookieBanner() {
               אנחנו משתמשים בעוגיות כדי לשפר את חוויית הגלישה שלך ולנתח את השימוש באתר.{' '}
               <Link
                 to="/privacy"
-                className="text-blue-600 underline hover:text-blue-800 transition-colors"
-                onClick={handleAccept}
+                className="text-petrol-700 font-medium underline hover:text-petrol-500 transition-colors"
               >
                 מדיניות הפרטיות
               </Link>
@@ -55,17 +77,18 @@ export default function CookieBanner() {
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* Buttons — deliberately equal weight so consent is freely given:
+            same size, style and prominence for both decline and accept. */}
         <div className="flex items-center gap-3 flex-shrink-0">
           <button
             onClick={handleDecline}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+            className="flex-1 md:flex-none min-w-[120px] px-5 py-2.5 text-sm font-semibold text-petrol-700 bg-white border border-petrol-700 rounded-lg hover:bg-petrol-50 transition-colors"
           >
             דחה
           </button>
           <button
             onClick={handleAccept}
-            className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+            className="flex-1 md:flex-none min-w-[120px] px-5 py-2.5 text-sm font-semibold text-petrol-700 bg-white border border-petrol-700 rounded-lg hover:bg-petrol-50 transition-colors"
           >
             אני מסכים/ה
           </button>
