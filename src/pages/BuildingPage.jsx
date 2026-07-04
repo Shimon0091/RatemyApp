@@ -450,16 +450,20 @@ export default function BuildingPage() {
               {apartments.map((apt) => {
                 const aptRating = coerceRating(apt.overall_rating)
                 const aptReviews = Number(apt.total_reviews) || 0
+                // Honest gate (mirrors PropertyPage's hasRatings): show a per-apt
+                // score ONLY when reviews exist AND the score is > 0. An apartment
+                // with 0 reviews keeps overall_rating = 0 (not NULL), so without the
+                // reviews check coerceRating(0) === 0 would render a fabricated "0.0".
+                const hasAptRating = aptReviews > 0 && aptRating != null && aptRating > 0
                 const tags = [
                   apt.deposit_returned_count > 0 && t('tags.depositReturned'),
                   apt.maintenance_timely_count > 0 && t('tags.maintenanceTimely'),
                   apt.contract_respected_count > 0 && t('tags.contractRespected'),
                   apt.nice_neighbors_count > 0 && t('tags.niceNeighbors'),
                 ].filter(Boolean).slice(0, 2)
-                const meta = [
-                  `${aptReviews.toLocaleString('he-IL')} ${t('search.reviews')}`,
-                  ...tags,
-                ].join(' · ')
+                const meta = aptReviews > 0
+                  ? [`${aptReviews.toLocaleString('he-IL')} ${t('search.reviews')}`, ...tags].join(' · ')
+                  : t('property.noReviews')
                 return (
                   <Link
                     key={apt.id}
@@ -475,7 +479,7 @@ export default function BuildingPage() {
                       </div>
                       <p className="text-muted text-sm mt-0.5 truncate">{meta}</p>
                     </div>
-                    {aptRating != null && (
+                    {hasAptRating && (
                       <span className="inline-flex items-center gap-1 rounded-lg bg-amber-100 text-amber-600 px-2.5 py-1 text-sm font-bold shrink-0">
                         <LineStarSolid className="text-amber" width="14" height="14" />{aptRating.toFixed(1)}
                       </span>
