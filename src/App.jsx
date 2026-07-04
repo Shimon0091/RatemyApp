@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
 import ErrorBoundary from './components/ErrorBoundary'
 import CookieBanner from './components/CookieBanner'
+import { useAnalytics } from './hooks/useAnalytics'
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -35,6 +36,9 @@ function PageLoader() {
 }
 
 function App() {
+  // GA4 page-view tracking + consent-gated load (no-op until user accepts cookies).
+  useAnalytics()
+
   return (
     <ErrorBoundary>
       <AuthProvider>

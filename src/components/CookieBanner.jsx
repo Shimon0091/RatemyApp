@@ -1,13 +1,22 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import {
+  COOKIE_CONSENT_KEY,
+  CONSENT_ACCEPTED,
+  CONSENT_DECLINED,
+  CONSENT_EVENT,
+} from '../lib/analytics'
 
-const COOKIE_KEY = 'diragon_cookie_consent'
+// Notify the app (useAnalytics) that the stored consent value changed.
+function notifyConsentChange() {
+  window.dispatchEvent(new Event(CONSENT_EVENT))
+}
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const consent = localStorage.getItem(COOKIE_KEY)
+    const consent = localStorage.getItem(COOKIE_CONSENT_KEY)
     if (!consent) {
       // Small delay so it doesn't flash on first render
       const timer = setTimeout(() => setVisible(true), 800)
@@ -16,13 +25,15 @@ export default function CookieBanner() {
   }, [])
 
   const handleAccept = () => {
-    localStorage.setItem(COOKIE_KEY, 'accepted')
+    localStorage.setItem(COOKIE_CONSENT_KEY, CONSENT_ACCEPTED)
     setVisible(false)
+    notifyConsentChange()
   }
 
   const handleDecline = () => {
-    localStorage.setItem(COOKIE_KEY, 'declined')
+    localStorage.setItem(COOKIE_CONSENT_KEY, CONSENT_DECLINED)
     setVisible(false)
+    notifyConsentChange()
   }
 
   if (!visible) return null

@@ -71,6 +71,7 @@ export default function PrivacyPage() {
               <ul className="list-disc pr-6 space-y-2">
                 <li><strong className="text-ink font-semibold">Supabase:</strong> אחסון מסד נתונים ואימות משתמשים. הנתונים מאוחסנים בשרתים מאובטחים.</li>
                 <li><strong className="text-ink font-semibold">Google:</strong> שירות אימות (Google Sign-In) ושירות כתובות (Google Places API) לצורך השלמה אוטומטית של כתובות.</li>
+                <li><strong className="text-ink font-semibold">Google Analytics (GA4):</strong> ניתוח שימוש מצטבר ואנונימי (מספר מבקרים, עמודים נצפים). נטען אך ורק לאחר קבלת הסכמתך לעוגיות, ואיננו משתמשים בו לפרסום או לפרסום מותאם אישית.</li>
                 <li><strong className="text-ink font-semibold">Vercel:</strong> אירוח האתר והגשת תוכן.</li>
               </ul>
               <p>לכל שירות צד שלישי יש מדיניות פרטיות משלו. אנו ממליצים לעיין בהן.</p>
@@ -98,8 +99,25 @@ export default function PrivacyPage() {
 
             <Section title="7. עוגיות (Cookies)">
               <p>
-                האתר משתמש בעוגיות לצורך ניהול סשן משתמש ושמירת העדפות.
+                האתר משתמש בעוגיות חיוניות לצורך ניהול סשן משתמש ושמירת העדפות.
                 עוגיות אלה הכרחיות לתפעול השירות ואינן משמשות למעקב פרסומי.
+              </p>
+              <p>
+                בנוסף, ובכפוף להסכמתך המפורשת דרך באנר העוגיות, אנו משתמשים ב-Google Analytics (GA4)
+                לניתוח שימוש מצטבר ואנונימי. עוגיות האנליטיקה נטענות אך ורק לאחר שבחרת "אני מסכים/ה" בבאנר.
+                אם תבחר "דחה", או כל עוד לא בחרת, לא ייטענו עוגיות אנליטיקה כלל ולא ייאסף מידע באמצעות Google Analytics.
+              </p>
+              <p>
+                ניתן לבטל את ההסכמה בכל עת: מחיקת נתוני הגלישה (Cookies ו-Local Storage) של האתר בדפדפן תאפס את בחירתך
+                ותציג מחדש את באנר העוגיות, שם ניתן לבחור "דחה". בנוסף, ניתן להשתמש בתוסף ההסתלקות הרשמי של Google Analytics בכתובת{' '}
+                <a
+                  href="https://tools.google.com/dlpage/gaoptout"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  tools.google.com/dlpage/gaoptout
+                </a>.
               </p>
             </Section>
 
