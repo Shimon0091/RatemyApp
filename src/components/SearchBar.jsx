@@ -1,100 +1,170 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useId } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { LinePin, LineSearch } from './icons/line'
+import { logger } from '../utils/logger'
 
-const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
+const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || ''
+const MIN_QUERY_LENGTH = 2
+const DEBOUNCE_MS = 300
 
-// Load Google Maps script once
-let googleMapsLoadPromise = null;
+// Load Google Maps script once (shared across every SearchBar instance;
+// also dedupes against any other page that injected the script).
+let googleMapsLoadPromise = null
 const loadGoogleMaps = () => {
-  if (googleMapsLoadPromise) return googleMapsLoadPromise;
+  if (googleMapsLoadPromise) return googleMapsLoadPromise
 
   googleMapsLoadPromise = new Promise((resolve, reject) => {
     if (window.google?.maps?.places?.AutocompleteSuggestion) {
-      resolve();
-      return;
+      resolve()
+      return
     }
-    // Check if script tag already exists
+    // Script tag already exists (e.g. injected by another page) — wait for it
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
       const check = setInterval(() => {
         if (window.google?.maps?.places?.AutocompleteSuggestion) {
-          clearInterval(check);
-          resolve();
+          clearInterval(check)
+          resolve()
         }
-      }, 100);
-      return;
+      }, 100)
+      return
     }
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=he&loading=async`;
-    script.async = true;
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&language=he&loading=async`
+    script.async = true
     script.onload = () => {
-      // Wait for the places library to be fully available
       const check = setInterval(() => {
         if (window.google?.maps?.places?.AutocompleteSuggestion) {
-          clearInterval(check);
-          resolve();
+          clearInterval(check)
+          resolve()
         }
-      }, 50);
-    };
+      }, 50)
+    }
     script.onerror = (err) => {
-      googleMapsLoadPromise = null;
-      reject(err);
-    };
-    document.head.appendChild(script);
-  });
+      googleMapsLoadPromise = null
+      reject(err)
+    }
+    document.head.appendChild(script)
+  })
 
-  return googleMapsLoadPromise;
-};
+  return googleMapsLoadPromise
+}
 
-export default function SearchBar() {
-  const [searchQuery, setSearchQuery] = useState('')
+// Remove "ישראל" / "Israel" and clean up commas for better database matching
+const cleanSearchQuery = (text) =>
+  text
+    .split(',')
+    .map((p) => p.trim())
+    .filter((p) => p && p !== 'ישראל' && p !== 'Israel')
+    .join(', ')
+
+// Warm-trust variants — classes copied 1:1 from the approved hero /
+// search-band markup so swapping the plain inputs is pixel-identical.
+const VARIANT_STYLES = {
+  hero: {
+    form: 'bg-white rounded-2xl shadow-bar p-2.5 flex flex-col sm:flex-row gap-2.5',
+    field: 'flex-1 flex items-center gap-2 px-4 rounded-xl bg-canvas',
+    input: 'w-full bg-transparent py-3.5 text-[15px] text-ink placeholder:text-muted/80 outline-none',
+    button:
+      'btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600',
+  },
+  compact: {
+    form: 'bg-white rounded-2xl shadow-bar p-2 flex flex-col sm:flex-row gap-2',
+    field: 'flex-1 flex items-center gap-2 px-4 rounded-xl bg-canvas',
+    input: 'w-full bg-transparent py-3 text-[15px] text-ink placeholder:text-muted/80 outline-none',
+    button:
+      'btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600',
+  },
+}
+
+/**
+ * Shared address search bar with Google Places autocomplete.
+ *
+ * @param {object} props
+ * @param {'hero'|'compact'} [props.variant] - visual variant (homepage hero / petrol refine band)
+ * @param {string} [props.className] - extra classes for the outer wrapper (margins, max-width, reveal)
+ * @param {string} [props.placeholder]
+ * @param {string} [props.buttonLabel]
+ * @param {string} [props.ariaLabel]
+ * @param {string} [props.initialQuery] - external query to sync into the input (e.g. from URL params)
+ * @param {(query: string) => void} [props.onSearch] - called with the trimmed query on submit or
+ *   suggestion selection; when omitted, navigates to `/search?q=<query>` (or `/search` when empty).
+ *
+ * Degrades gracefully: without a Places key (or if the script fails to load)
+ * it behaves as a plain search input — no notice, no console spam.
+ */
+export default function SearchBar({
+  variant = 'hero',
+  className = '',
+  placeholder = 'הכנס כתובת — לדוגמה: רוטשילד 45, תל אביב',
+  buttonLabel = 'חפש ביקורות',
+  ariaLabel = 'חיפוש כתובת',
+  initialQuery = '',
+  onSearch,
+}) {
+  const styles = VARIANT_STYLES[variant] || VARIANT_STYLES.hero
+  const [searchQuery, setSearchQuery] = useState(initialQuery)
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [isLoadingPlaces, setIsLoadingPlaces] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const [mapsReady, setMapsReady] = useState(false)
-  const autocompleteRef = useRef(null)
+  const rootRef = useRef(null)
+  const skipFetchRef = useRef(false)
+  const searchQueryRef = useRef(searchQuery)
   const navigate = useNavigate()
+  const listboxId = useId()
 
-  // Load Google Maps SDK
-  useEffect(() => {
-    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) return;
-    loadGoogleMaps().then(() => {
-      setMapsReady(true);
-    }).catch(err => {
-      console.error('Failed to load Google Maps:', err);
-    });
-  }, []);
+  searchQueryRef.current = searchQuery
 
-  // Search places using the new AutocompleteSuggestion API
+  // Keep the input in sync when the outside query changes (URL navigation)
   useEffect(() => {
-    if (!searchQuery || searchQuery.length < 2 || !mapsReady) {
+    if (searchQueryRef.current !== initialQuery) {
+      skipFetchRef.current = true
+      setSearchQuery(initialQuery)
+    }
+  }, [initialQuery])
+
+  // Load Google Maps SDK (quiet no-op when the key is missing)
+  useEffect(() => {
+    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) return
+    loadGoogleMaps()
+      .then(() => setMapsReady(true))
+      .catch((err) => logger.error('Failed to load Google Maps:', err))
+  }, [])
+
+  // Fetch suggestions via the AutocompleteSuggestion API (debounced)
+  useEffect(() => {
+    if (skipFetchRef.current) {
+      skipFetchRef.current = false
+      return
+    }
+    if (!searchQuery || searchQuery.length < MIN_QUERY_LENGTH || !mapsReady) {
       setSuggestions([])
+      setActiveIndex(-1)
       return
     }
 
-    setIsLoadingPlaces(true)
     let cancelled = false
-
     const timeoutId = setTimeout(async () => {
       try {
-        const { suggestions: results } = await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input: searchQuery,
-          includedRegionCodes: ['il'],
-          language: 'he',
-        })
+        const { suggestions: results } =
+          await window.google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: searchQuery,
+            includedRegionCodes: ['il'],
+            language: 'he',
+          })
 
-        if (!cancelled && results && results.length > 0) {
-          setSuggestions(results)
-          setShowSuggestions(true)
-        } else if (!cancelled) {
-          setSuggestions([])
-        }
+        if (cancelled) return
+        setSuggestions(results || [])
+        setActiveIndex(-1)
+        setShowSuggestions(Boolean(results?.length))
       } catch (err) {
-        console.error('Places API error:', err)
-        if (!cancelled) setSuggestions([])
-      } finally {
-        if (!cancelled) setIsLoadingPlaces(false)
+        logger.warn('Places autocomplete error:', err)
+        if (!cancelled) {
+          setSuggestions([])
+          setActiveIndex(-1)
+        }
       }
-    }, 300)
+    }, DEBOUNCE_MS)
 
     return () => {
       cancelled = true
@@ -105,118 +175,123 @@ export default function SearchBar() {
   // Close suggestions on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
+      if (rootRef.current && !rootRef.current.contains(event.target)) {
         setShowSuggestions(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      setShowSuggestions(false)
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+  const commitSearch = (value) => {
+    const trimmed = value.trim()
+    setShowSuggestions(false)
+    setActiveIndex(-1)
+    if (onSearch) {
+      onSearch(trimmed)
+      return
     }
+    navigate(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : '/search')
   }
 
-  const cleanSearchQuery = (text) => {
-    // Remove "ישראל" / "Israel" and clean up commas for better database matching
-    return text
-      .split(',')
-      .map(p => p.trim())
-      .filter(p => p && p !== 'ישראל' && p !== 'Israel')
-      .join(', ')
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    commitSearch(searchQuery)
   }
 
   const handleSelectPlace = (text) => {
     const cleaned = cleanSearchQuery(text)
+    skipFetchRef.current = true
     setSearchQuery(cleaned)
-    setShowSuggestions(false)
     setSuggestions([])
-    navigate(`/search?q=${encodeURIComponent(cleaned)}`)
+    commitSearch(cleaned)
   }
 
-  const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(suggestion)
-    navigate(`/search?q=${encodeURIComponent(suggestion)}`)
+  const isOpen = showSuggestions && suggestions.length > 0
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setShowSuggestions(false)
+      setActiveIndex(-1)
+      return
+    }
+    if (!isOpen) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActiveIndex((i) => (i + 1) % suggestions.length)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1))
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault()
+      const text = suggestions[activeIndex]?.placePrediction?.text?.text || ''
+      if (text) handleSelectPlace(text)
+    }
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto" ref={autocompleteRef}>
-      <form onSubmit={handleSearch} className="relative">
-        <div className="relative" style={{boxShadow: '0 10px 40px rgba(37, 99, 235, 0.15)'}}>
+    <div ref={rootRef} className={`relative ${className}`}>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div className={styles.field}>
+          <LinePin className="text-muted shrink-0" width="20" height="20" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-            placeholder="חפש דירה לפי כתובת: רחוב, מספר בית, תל אביב..."
-            className="w-full px-8 py-6 text-xl border-2 border-gray-200 rounded-2xl
-                     focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20
-                     transition-all shadow-lg hover:border-primary/50 font-medium"
+            onKeyDown={handleKeyDown}
+            aria-label={ariaLabel}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={isOpen}
+            aria-controls={listboxId}
+            aria-activedescendant={activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined}
+            placeholder={placeholder}
+            className={styles.input}
             dir="rtl"
           />
-          <button
-            type="submit"
-            className="absolute left-4 top-1/2 -translate-y-1/2
-                     px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl
-                     hover:from-blue-700 hover:to-blue-800 transition-all font-bold text-lg
-                     shadow-lg hover:shadow-xl"
-          >
-            🔍 חפש
-          </button>
         </div>
-
-        {/* Google Places Suggestions Dropdown */}
-        {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
-            {suggestions.map((suggestion, index) => {
-              const prediction = suggestion.placePrediction;
-              const text = prediction?.text?.text || '';
-              return (
-                <button
-                  key={prediction?.placeId || index}
-                  type="button"
-                  onClick={() => handleSelectPlace(text)}
-                  className="w-full px-6 py-4 text-right hover:bg-primary-50 transition-colors flex items-center gap-3 border-b border-gray-100 last:border-b-0"
-                  dir="rtl"
-                >
-                  <span className="text-gray-400 flex-shrink-0">📍</span>
-                  <span className="text-gray-800 font-medium">{text}</span>
-                </button>
-              );
-            })}
-            <div className="px-4 py-2 bg-gray-50 text-xs text-gray-400 text-center">
-              Powered by Google
-            </div>
-          </div>
-        )}
-
-        {/* Loading indicator */}
-        {isLoadingPlaces && searchQuery.length >= 2 && (
-          <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl p-4 text-center text-gray-500" dir="rtl">
-            מחפש כתובות...
-          </div>
-        )}
+        <button type="submit" className={styles.button}>
+          <LineSearch width="18" height="18" />
+          {buttonLabel}
+        </button>
       </form>
 
-      {/* Quick suggestions */}
-      <div className="mt-4 flex gap-2 flex-wrap justify-center">
-        <span className="text-sm text-gray-600">חיפושים פופולריים:</span>
-        {['דיזנגוף', 'רוטשילד', 'פלורנטין', 'נווה צדק'].map((area) => (
-          <button
-            key={area}
-            onClick={() => handleSuggestionClick(area)}
-            className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full
-                     hover:bg-gray-200 transition-colors"
-          >
-            {area}
-          </button>
-        ))}
-      </div>
+      {/* Google Places suggestions — warm-trust dropdown */}
+      {isOpen && (
+        <div
+          id={listboxId}
+          role="listbox"
+          aria-label="הצעות כתובת"
+          className="absolute top-full right-0 left-0 z-50 mt-2 bg-white rounded-2xl shadow-lift border border-black/5 overflow-hidden"
+        >
+          {suggestions.map((suggestion, index) => {
+            const prediction = suggestion.placePrediction
+            const text = prediction?.text?.text || ''
+            return (
+              <button
+                key={prediction?.placeId || index}
+                id={`${listboxId}-option-${index}`}
+                type="button"
+                role="option"
+                aria-selected={index === activeIndex}
+                onClick={() => handleSelectPlace(text)}
+                onMouseEnter={() => setActiveIndex(index)}
+                className={`w-full px-5 py-3.5 text-right flex items-center gap-3 border-b border-black/5 last:border-b-0 transition-colors ${
+                  index === activeIndex ? 'bg-canvas' : ''
+                }`}
+                dir="rtl"
+              >
+                <LinePin className="text-petrol shrink-0" width="16" height="16" />
+                <span className="text-ink text-[15px] font-medium truncate">{text}</span>
+              </button>
+            )
+          })}
+          <div className="px-4 py-1.5 bg-canvas text-[11px] text-muted text-center" dir="ltr">
+            Powered by Google
+          </div>
+        </div>
+      )}
     </div>
   )
 }

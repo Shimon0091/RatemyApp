@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Seo, { BASE_URL, SITE_NAME } from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import SearchBar from '../components/SearchBar'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 import { getTopRatedProperties } from '../lib/database'
 import { supabase } from '../lib/supabase'
@@ -25,9 +26,6 @@ const IconCheck = (p) => (
 const IconArrowLeft = (p) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
 )
-const IconSearch = (p) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-)
 const IconEdit = (p) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
 )
@@ -46,11 +44,9 @@ const IconBuilding = (p) => (
 
 export default function HomePage() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const [topProperties, setTopProperties] = useState([])
   const [stats, setStats] = useState({ totalReviews: 0, totalProperties: 0 })
   const [loading, setLoading] = useState(true)
-  const [query, setQuery] = useState('')
 
   useEffect(() => {
     loadData()
@@ -94,12 +90,6 @@ export default function HomePage() {
     if (property.maintenance_timely_count > 0) tags.push('תיקונים מהירים')
     if (property.contract_respected_count > 0) tags.push('עמידה בחוזה')
     return tags.slice(0, 2)
-  }
-
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`)
-    else navigate('/search')
   }
 
   const remaining = Math.max(0, stats.totalProperties - topProperties.length)
@@ -197,31 +187,8 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* search bar */}
-            <form
-              onSubmit={handleSearch}
-              className="reveal mt-9 max-w-3xl bg-white rounded-2xl shadow-bar p-2.5 flex flex-col sm:flex-row gap-2.5"
-            >
-              <div className="flex-1 flex items-center gap-2 px-4 rounded-xl bg-canvas">
-                <IconPin className="text-muted shrink-0" width="20" height="20" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  aria-label="חיפוש כתובת"
-                  placeholder="הכנס כתובת — לדוגמה: רוטשילד 45, תל אביב"
-                  className="w-full bg-transparent py-3.5 text-[15px] placeholder:text-muted/80 outline-none"
-                  dir="rtl"
-                />
-              </div>
-              <button
-                type="submit"
-                className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
-              >
-                <IconSearch width="18" height="18" />
-                חפש ביקורות
-              </button>
-            </form>
+            {/* search bar — shared component with Google Places autocomplete */}
+            <SearchBar variant="hero" className="reveal mt-9 max-w-3xl" />
             <p className="reveal mt-4 text-white/80 text-sm">
               הפלטפורמה הראשונה בישראל לדירוג דירות ובעלי בתים. בדוק ביקורות לפני שאתה שוכר.
             </p>
