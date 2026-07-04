@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Seo from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { LineSearch, LineArrowLeft, LineBuilding } from '../components/icons/line'
@@ -6,6 +7,7 @@ import { LineSearch, LineArrowLeft, LineBuilding } from '../components/icons/lin
 export default function NotFoundPage() {
   return (
     <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
+      <Seo title="הדף לא נמצא - דירגון" noindex />
       <Header />
 
       <main id="main-content" className="flex-1 grid place-items-center px-5 py-16 lg:py-24">

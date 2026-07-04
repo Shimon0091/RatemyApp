@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Seo from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PageHero from '../components/PageHero'
@@ -27,6 +28,10 @@ export default function AboutPage() {
 
   return (
     <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
+      <Seo
+        title="אודות דירגון - הפלטפורמה לדירוג דירות בישראל"
+        description="דירגון הוא פרויקט עצמאי שנבנה על ידי שוכרים, בשביל שוכרים. הכירו את הסיפור, העקרונות והמטרה שלנו."
+      />
       <Header />
 
       <PageHero

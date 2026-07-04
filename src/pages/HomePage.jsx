@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Seo, { BASE_URL, SITE_NAME } from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { useScrollReveal } from '../hooks/useScrollReveal'
@@ -109,8 +110,41 @@ export default function HomePage() {
     { top: '30%', left: '30%', dur: '8s', delay: '.6s' },
   ]
 
+  const homeJsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: SITE_NAME,
+      alternateName: 'Diragon',
+      url: BASE_URL,
+      logo: `${BASE_URL}/og-image.png`,
+      description: 'הפלטפורמה הראשונה בישראל לדירוג דירות ובעלי בתים.',
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      url: BASE_URL,
+      inLanguage: 'he-IL',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${BASE_URL}/search?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ]
+
   return (
     <div className="bg-canvas text-ink font-body min-h-screen overflow-x-hidden">
+      <Seo
+        title="דירגון - דירוג דירות וביקורות על בעלי בתים בישראל"
+        description="הפלטפורמה הראשונה בישראל לדירוג דירות ובעלי בתים. בדקו ביקורות אמיתיות של שוכרים לפני שאתם חותמים על חוזה שכירות."
+        canonicalPath="/"
+        jsonLd={homeJsonLd}
+      />
       <Header />
 
       <main id="main-content">

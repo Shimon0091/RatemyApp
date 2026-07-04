@@ -1,3 +1,4 @@
+import Seo from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PageHero from '../components/PageHero'
@@ -18,6 +19,10 @@ export default function TermsPage() {
 
   return (
     <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
+      <Seo
+        title="תנאי שימוש - דירגון"
+        description="תנאי השימוש של דירגון - פלטפורמת דירוג הדירות בישראל."
+      />
       <Header />
 
       <PageHero

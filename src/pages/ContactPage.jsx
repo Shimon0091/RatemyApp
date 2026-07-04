@@ -1,3 +1,4 @@
+import Seo from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import PageHero from '../components/PageHero'
@@ -45,6 +46,10 @@ export default function ContactPage() {
 
   return (
     <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
+      <Seo
+        title="צור קשר - דירגון"
+        description="יש לכם שאלה, הצעה או דיווח? צרו קשר עם צוות דירגון. אנו משתדלים להגיב תוך 48 שעות בימי עבודה."
+      />
       <Header />
 
       <PageHero

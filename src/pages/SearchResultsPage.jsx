@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Seo from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import Pagination from '../components/Pagination'
@@ -165,6 +166,11 @@ export default function SearchResultsPage() {
 
   return (
     <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
+      <Seo
+        title="חיפוש דירות וביקורות - דירגון"
+        description="חפשו דירות לפי כתובת או עיר וקראו ביקורות אמיתיות של שוכרים קודמים לפני שאתם שוכרים."
+        canonicalPath="/search"
+      />
       <Header />
 
       <main id="main-content" className="flex-1">
