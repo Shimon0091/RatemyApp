@@ -166,6 +166,180 @@ export async function getNeighborhoods() {
 }
 
 // ======================
+// BUILDINGS (aggregated read layer over `properties`, via buildings_summary VIEW)
+// ======================
+// Requires migration_add_building_key.sql to be applied (adds properties.building_key
+// + the buildings_summary VIEW). All three functions are read-only and respect RLS:
+// the VIEW is security_invoker, and getBuildingReviews reads `reviews` with an
+// explicit status='approved' filter (no RPC / SECURITY DEFINER — pending never leaks).
+
+// Search buildings (deduped across apartments) with filters and pagination.
+// Mirrors searchProperties, but queries the buildings_summary VIEW so one physical
+// building returns as ONE row (with count/pagination intact) instead of one row per
+// apartment. select('*') also returns reviewed_apartment_count (apartments that
+// actually have reviews). overall_rating is NULL for buildings below the k-anonymity
+// headline gate (total_reviews < 3 OR reviewed_apartment_count < 2) — including all
+// zero-review buildings — since the VIEW gates it fail-secure.
+export async function searchBuildings(query, options = {}) {
+  const {
+    minRating = null,
+    neighborhood = null,
+    minReviews = null,
+    sortBy = 'total_reviews',
+    ascending = false,
+    page = 1,
+    pageSize = 20
+  } = options
+
+  try {
+    let dbQuery = supabase
+      .from('buildings_summary')
+      .select('*', { count: 'exact' })
+
+    // Search by street or city (and optionally building number) — same parsing
+    // and geresh handling as searchProperties.
+    if (query) {
+      const firstPart = query.split(',')[0].trim()
+      const match = firstPart.match(/^(.+?)\s+(\d+)$/)
+      if (match) {
+        const [, street, buildingNum] = match
+        const normalizedStreet = normalizeSearchText(street)
+        dbQuery = dbQuery.or(`street.ilike.%${normalizedStreet}%,city.ilike.%${normalizedStreet}%`)
+        dbQuery = dbQuery.ilike('building_number', `%${buildingNum}%`)
+      } else if (firstPart) {
+        const normalized = normalizeSearchText(firstPart)
+        dbQuery = dbQuery.or(`street.ilike.%${normalized}%,city.ilike.%${normalized}%`)
+      }
+    }
+
+    if (minRating) {
+      dbQuery = dbQuery.gte('overall_rating', minRating)
+    }
+    if (neighborhood) {
+      dbQuery = dbQuery.eq('neighborhood', neighborhood)
+    }
+    if (minReviews) {
+      dbQuery = dbQuery.gte('total_reviews', minReviews)
+    }
+
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
+    dbQuery = dbQuery
+      .order(sortBy, { ascending, nullsFirst: false })
+      .range(from, to)
+
+    const { data, error, count } = await dbQuery
+
+    return {
+      data,
+      error,
+      count,
+      page,
+      pageSize,
+      totalPages: count ? Math.ceil(count / pageSize) : 0
+    }
+  } catch (err) {
+    console.error('searchBuildings exception:', err)
+    return { data: [], error: err, count: 0, page, pageSize, totalPages: 0 }
+  }
+}
+
+// Get a single building summary by its building_key (canonical building page).
+// Returns { data: null, error: null } when no building matches (bad/stale URL).
+export async function getBuildingByKey(key) {
+  const { data, error } = await supabase
+    .from('buildings_summary')
+    .select('*')
+    .eq('building_key', key)
+    .maybeSingle()
+
+  return { data, error }
+}
+
+// Unified, approved-only review feed for a whole building, with pagination.
+// `buildingKeyOrIds` may be either:
+//   - a building_key string  -> property ids are resolved from `properties`, or
+//   - an array of property ids (e.g. building.property_ids from getBuildingByKey).
+// Each review is joined to its property so the UI can tag it with its apartment.
+export async function getBuildingReviews(buildingKeyOrIds, options = {}) {
+  const {
+    status = 'approved',
+    sortBy = 'created_at',
+    ascending = false,
+    page = 1,
+    pageSize = 20
+  } = options
+
+  try {
+    let propertyIds = Array.isArray(buildingKeyOrIds) ? buildingKeyOrIds : null
+
+    // Resolve property ids from the building_key when a string was passed.
+    if (propertyIds === null) {
+      const { data: props, error: propsError } = await supabase
+        .from('properties')
+        .select('id')
+        .eq('building_key', buildingKeyOrIds)
+
+      if (propsError) {
+        return { data: [], error: propsError, count: 0, page, pageSize, totalPages: 0 }
+      }
+      propertyIds = (props || []).map((p) => p.id)
+    }
+
+    if (!propertyIds || propertyIds.length === 0) {
+      return { data: [], error: null, count: 0, page, pageSize, totalPages: 0 }
+    }
+
+    let dbQuery = supabase
+      .from('reviews')
+      .select(`
+        *,
+        properties (
+          id,
+          street,
+          building_number,
+          floor,
+          apartment,
+          city
+        ),
+        user_profiles (
+          display_name,
+          avatar_url
+        )
+      `, { count: 'exact' })
+      .in('property_id', propertyIds)
+
+    // Approved-only by default (RLS also enforces this for anon). Passing
+    // status=null removes the explicit filter but RLS still applies.
+    if (status) {
+      dbQuery = dbQuery.eq('status', status)
+    }
+
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
+    dbQuery = dbQuery
+      .order(sortBy, { ascending })
+      .range(from, to)
+
+    const { data, error, count } = await dbQuery
+
+    return {
+      data,
+      error,
+      count,
+      page,
+      pageSize,
+      totalPages: count ? Math.ceil(count / pageSize) : 0
+    }
+  } catch (err) {
+    console.error('getBuildingReviews exception:', err)
+    return { data: [], error: err, count: 0, page, pageSize, totalPages: 0 }
+  }
+}
+
+// ======================
 // REVIEWS
 // ======================
 

@@ -9,6 +9,7 @@ import { useAnalytics } from './hooks/useAnalytics'
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage'))
 const PropertyPage = lazy(() => import('./pages/PropertyPage'))
+const BuildingPage = lazy(() => import('./pages/BuildingPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const WriteReviewPage = lazy(() => import('./pages/WriteReviewPage'))
 const EditReviewPage = lazy(() => import('./pages/EditReviewPage'))
@@ -46,6 +47,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/property/:id" element={<PropertyPage />} />
+            <Route path="/building/:city/:street/:number" element={<BuildingPage />} />
             <Route path="/search" element={<SearchResultsPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/write-review" element={<WriteReviewPage />} />
