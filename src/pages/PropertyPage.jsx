@@ -91,6 +91,26 @@ export default function PropertyPage() {
     return Math.round((count / total) * 100)
   }
 
+  // Carry the exact property/address into the review form so Step 1 is pre-filled
+  // and locked — this both removes friction and prevents a duplicate property row
+  // being created for a building that already exists.
+  const goWriteReview = () => {
+    if (!property) {
+      navigate('/write-review')
+      return
+    }
+    navigate('/write-review', {
+      state: {
+        propertyId: property.id,
+        street: property.street || '',
+        buildingNumber: property.building_number || '',
+        floor: property.floor || '',
+        apartment: property.apartment || '',
+        city: property.city || '',
+      },
+    })
+  }
+
   const selectClass =
     'rounded-xl bg-canvas border border-black/10 px-4 py-2.5 text-[15px] text-ink ' +
     'outline-none transition-colors focus:border-petrol focus:ring-2 focus:ring-petrol/20 cursor-pointer'
@@ -200,7 +220,7 @@ export default function PropertyPage() {
               </div>
 
               <button
-                onClick={() => navigate('/write-review')}
+                onClick={goWriteReview}
                 className="btn inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600 shrink-0"
               >
                 <LineEdit width="18" height="18" />
@@ -284,7 +304,7 @@ export default function PropertyPage() {
                 <h3 className="mt-5 font-heading font-extrabold text-2xl text-ink">{t('property.noReviewsYet')}</h3>
                 <p className="mt-2 text-muted max-w-md mx-auto">{t('property.beFirst')}</p>
                 <button
-                  onClick={() => navigate('/write-review')}
+                  onClick={goWriteReview}
                   className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
                 >
                   <LineEdit width="18" height="18" />
@@ -367,7 +387,7 @@ export default function PropertyPage() {
               הדירוגים מבוססים על נתונים קיימים, אבל אף אחד עדיין לא כתב ביקורת מפורטת. היו הראשונים!
             </p>
             <button
-              onClick={() => navigate('/write-review')}
+              onClick={goWriteReview}
               className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
             >
               <LineEdit width="18" height="18" />
@@ -385,7 +405,7 @@ export default function PropertyPage() {
             <h3 className="mt-5 font-heading font-black text-2xl md:text-3xl">{t('property.livedHere')}</h3>
             <p className="mt-3 text-white/80 max-w-2xl mx-auto text-lg">{t('property.shareExperience')}</p>
             <button
-              onClick={() => navigate('/write-review')}
+              onClick={goWriteReview}
               className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
             >
               {t('property.writeReviewCta')}

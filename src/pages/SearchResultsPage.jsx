@@ -421,7 +421,7 @@ export default function SearchResultsPage() {
                     גרתם בכתובת הזו? היו הראשונים לשתף את החוויה שלכם.
                   </p>
                   <button
-                    onClick={() => navigate('/write-review')}
+                    onClick={() => navigate('/write-review', { state: { street: query } })}
                     className="btn mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
                   >
                     <LineEdit width="18" height="18" />
