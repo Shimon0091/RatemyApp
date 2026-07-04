@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import Seo, { BASE_URL } from '../components/Seo'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import ReviewCard from '../components/ReviewCard'
@@ -135,6 +136,7 @@ export default function PropertyPage() {
   if (error || !property) {
     return (
       <div className="bg-canvas text-ink font-body min-h-screen flex flex-col">
+        <Seo title="הדירה לא נמצאה - דירגון" noindex />
         <Header />
         <div className="flex-1 grid place-items-center py-24 px-5 text-center">
           <div className="max-w-md">
@@ -171,8 +173,67 @@ export default function PropertyPage() {
     { value: property.value_rating, Icon: LineShekel, label: t('rating.value') },
   ].filter((c) => c.value > 0)
 
+  // ---- SEO: per-page title/description + schema.org structured data ----
+  const addressLine = `${property.street} ${property.building_number}`.trim()
+  const fullAddress = [addressLine, property.city].filter(Boolean).join(', ')
+  const hasRatings = property.total_reviews > 0 && property.overall_rating > 0
+
+  const seoTitle = `${fullAddress} - ביקורות ודירוג דירה | דירגון`
+  const seoDescription = hasRatings
+    ? `דירוג ${(property.overall_rating || 0).toFixed(1)} מתוך 5 על סמך ${property.total_reviews} ביקורות של שוכרים על ${fullAddress}. קראו חוות דעת אמיתיות בדירגון.`
+    : `עדיין אין ביקורות על ${fullAddress}. היו הראשונים לשתף את חווית השכירות שלכם בדירגון.`
+
+  // schema.org Product carries aggregateRating + review array for rich results.
+  // Only emit the rating block when there is at least one review (Google requires
+  // a positive ratingCount) and never fabricate data that isn't on the page.
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${fullAddress} - דירה להשכרה`,
+    url: `${BASE_URL}/property/${property.id}`,
+    category: 'דירה להשכרה',
+  }
+
+  if (hasRatings) {
+    productJsonLd.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: Number((property.overall_rating || 0).toFixed(1)),
+      reviewCount: property.total_reviews,
+      bestRating: 5,
+      worstRating: 1,
+    }
+  }
+
+  const reviewNodes = reviews
+    .filter((r) => r.overall_rating > 0)
+    .map((r) => {
+      const node = {
+        '@type': 'Review',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: r.overall_rating,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        author: { '@type': 'Person', name: 'שוכר/ת אנונימי/ת' },
+      }
+      if (r.created_at) node.datePublished = new Date(r.created_at).toISOString().slice(0, 10)
+      if (r.review_text) node.reviewBody = r.review_text
+      return node
+    })
+
+  if (reviewNodes.length > 0) {
+    productJsonLd.review = reviewNodes
+  }
+
   return (
     <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        canonicalPath={`/property/${property.id}`}
+        jsonLd={productJsonLd}
+      />
       <Header />
 
       <main id="main-content" className="flex-1 max-w-5xl w-full mx-auto px-5 lg:px-8 py-8 lg:py-10">
