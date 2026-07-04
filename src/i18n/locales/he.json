@@ -7,12 +7,22 @@
   "nav": {
     "home": "דף הבית",
     "about": "אודות",
-    "writeReview": "כתוב דירגון",
+    "writeReview": "כתוב ביקורת",
     "login": "התחבר",
     "logout": "התנתק",
     "profile": "הפרופיל שלי",
-    "myReviews": "הדירגונים שלי",
+    "myReviews": "הביקורות שלי",
     "admin": "ניהול"
+  },
+  "coldStart": {
+    "headline": "אנחנו רק בהתחלה — ואתם חלק מזה",
+    "subline": "דירגון נבנה עכשיו, ביקורת אחת בכל פעם. כתבו על דירה שגרתם בה ותעזרו לשוכר הבא לדעת למה הוא נכנס.",
+    "cta": "כתבו ביקורת ראשונה"
+  },
+  "trust": {
+    "chipAnonymous": "אנונימי לחלוטין",
+    "chipModerated": "נבדק לפני פרסום",
+    "chipFree": "חינם לחלוטין"
   },
   "hero": {
     "title": "שוקל להשכיר דירה?",
@@ -20,7 +30,8 @@
     "description": "דירגון עוזר לך למצוא דירות איכותיות ולהימנע מדירות בעייתיות",
     "searchPlaceholder": "חפש לפי רחוב או כתובת...",
     "ctaWrite": "כתוב ביקורת",
-    "ctaSearch": "חפש דירה"
+    "ctaSearch": "חפש דירה",
+    "badgeModerated": "כל ביקורת עוברת בדיקת מנהל"
   },
   "stats": {
     "reviews": "ביקורות",
@@ -48,9 +59,9 @@
   "rating": {
     "overall": "דירוג כללי",
     "maintenance": "איכות תחזוקה",
-    "communication": "תקשורת עם בעל הבית",
+    "communication": "תקשורת ותגובתיות",
     "value": "יחס מחיר-ערך",
-    "contractCompliance": "עמידה בתנאי החוזה",
+    "contractCompliance": "כיבוד תנאי החוזה",
     "timelyRepairs": "תיקונים בזמן סביר"
   },
   "property": {
@@ -68,26 +79,26 @@
     "notFound": "הדירה לא נמצאה",
     "basedOn": "מבוסס על",
     "depositReturned": "החזרת פיקדון במלואו",
-    "contractRespected": "עמידה בתנאי החוזה",
+    "contractRespected": "תנאי החוזה כובדו",
     "timelyRepairs": "תיקונים בזמן סביר",
     "parkingAvailable": "חניה זמינה",
     "niceNeighbors": "שכנים נעימים",
     "nearbyAmenities": "קרוב לחנויות/שירותים",
-    "noReviewsYet": "עדיין אין דירגונים על הדירה הזו",
-    "beFirst": "היה הראשון לכתוב דירגון ולעזור לשוכרים אחרים!",
-    "writeFirstReview": "כתוב את הדירגון הראשון",
-    "reviewsTitle": "דירגונים",
+    "noReviewsYet": "עדיין אין ביקורות על הדירה הזו",
+    "beFirst": "היו הראשונים לכתוב ביקורת ולעזור לשוכרים אחרים!",
+    "writeFirstReview": "כתבו את הביקורת הראשונה",
+    "reviewsTitle": "ביקורות",
     "sortNewest": "הכי חדשים",
     "sortHelpful": "הכי מועילים",
     "sortHighRating": "דירוג גבוה",
     "sortLowRating": "דירוג נמוך",
     "livedHere": "גרת בדירה הזו?",
     "shareExperience": "שתף את החוויה שלך ועזור לשוכרים אחרים!",
-    "writeReviewCta": "כתוב דירגון על הדירה"
+    "writeReviewCta": "כתבו ביקורת על הדירה"
   },
   "tags": {
     "depositReturned": "פיקדון הוחזר במלואו",
-    "contractRespected": "עמידה בתנאי החוזה",
+    "contractRespected": "תנאי החוזה כובדו",
     "maintenanceTimely": "תיקונים בזמן",
     "responsive": "תקשורת מהירה",
     "clean": "נקייה",
@@ -109,32 +120,32 @@
     "found": "נמצאו",
     "propertiesFor": "דירות עבור",
     "searching": "מחפש דירות...",
-    "reviews": "דירגונים",
+    "reviews": "ביקורות",
     "noResults": "לא נמצאו דירות",
     "noResultsFor": "לא נמצאו דירות עבור",
     "tryDifferent": "נסה לחפש במילים אחרות",
-    "writeFirst": "כתוב דירגון ראשון על דירה זו",
+    "writeFirst": "כתבו ביקורת ראשונה על דירה זו",
     "searchProperties": "חפש דירות",
     "useSearchBar": "השתמש בשדה החיפוש למעלה כדי למצוא דירות"
   },
   "profile": {
     "loadingProfile": "טוען פרופיל...",
-    "totalReviews": "סה\"כ דירגונים",
-    "approvedReviews": "דירגונים מאושרים",
+    "totalReviews": "סה\"כ ביקורות",
+    "approvedReviews": "ביקורות מאושרות",
     "pendingReviews": "ממתינים לאישור",
-    "myReviews": "הדירגונים שלי",
-    "writeNew": "כתוב דירגון חדש",
+    "myReviews": "הביקורות שלי",
+    "writeNew": "כתוב ביקורת חדשה",
     "propertyNotAvailable": "דירה לא זמינה",
     "viewProperty": "צפה בדירה",
-    "noReviewsYet": "עדיין לא כתבת דירגונים",
-    "startWriting": "התחל לכתוב דירגונים ולעזור לשוכרים אחרים!",
-    "writeFirstReview": "כתוב דירגון ראשון",
-    "deleteSuccess": "הדירגון נמחק בהצלחה",
+    "noReviewsYet": "עדיין לא כתבת ביקורות",
+    "startWriting": "התחילו לכתוב ביקורות ולעזור לשוכרים אחרים!",
+    "writeFirstReview": "כתבו ביקורת ראשונה",
+    "deleteSuccess": "הביקורת נמחקה בהצלחה",
     "deleteModal": {
-      "title": "מחיקת דירגון",
-      "description": "האם אתה בטוח שברצונך למחוק את הדירגון הזה?",
+      "title": "מחיקת ביקורת",
+      "description": "האם למחוק את הביקורת הזו?",
       "warning": "פעולה זו אינה ניתנת לביטול.",
-      "confirm": "מחק דירגון"
+      "confirm": "מחק ביקורת"
     }
   },
   "reviewCard": {
@@ -185,23 +196,33 @@
     "minRating": "דירוג מינימלי",
     "neighborhood": "שכונה",
     "allNeighborhoods": "כל השכונות",
-    "minReviews": "מינימום דירגונים",
+    "minReviews": "מינימום ביקורות",
     "anyReviews": "כל מספר",
     "sortBy": "מיין לפי",
     "apply": "החל סינון",
     "clear": "נקה סינון"
   },
   "editReview": {
-    "title": "ערוך דירגון",
-    "notFound": "הדירגון לא נמצא",
-    "cannotEditRejected": "לא ניתן לערוך דירגון שנדחה",
+    "title": "ערוך ביקורת",
+    "notFound": "הביקורת לא נמצאה",
+    "cannotEditRejected": "לא ניתן לערוך ביקורת שנדחתה",
     "reviewTextRequired": "יש להזין טקסט ביקורת",
     "allRatingsRequired": "יש למלא את כל הדירוגים",
-    "success": "הדירגון עודכן בהצלחה!",
+    "success": "הביקורת עודכנה בהצלחה!",
     "save": "שמור שינויים",
     "notice": {
       "title": "שים לב",
-      "description": "לאחר עריכת הדירגון, הוא יועבר לאישור מנהל מחדש."
+      "description": "לאחר עריכת הביקורת, היא תועבר שוב לבדיקת מנהל."
+    }
+  },
+  "writeReview": {
+    "q": {
+      "deposit": "האם הפיקדון הוחזר במלואו?",
+      "contract": "האם תנאי החוזה כובדו?",
+      "repairs": "האם התיקונים טופלו בזמן סביר?",
+      "parking": "האם יש חניה זמינה באזור?",
+      "neighbors": "האם השכנים נעימים?",
+      "amenities": "האם יש חנויות ושירותים בקרבת מקום?"
     }
   },
   "form": {

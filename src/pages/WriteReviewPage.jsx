@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { createReview } from '../lib/database';
@@ -9,8 +9,8 @@ import RatingInput from '../components/RatingInput';
 import { logger } from '../utils/logger';
 import {
   LinePin, LineBuilding, LineStarSolid, LineDoc, LineCheck, LineX,
-  LineArrowLeft, LineArrowRight, LineAlert, LineSearch, LineLock, LineClock,
-  LineHeart, LineBadgeCheck,
+  LineArrowLeft, LineArrowRight, LineAlert, LineSearch, LineLock,
+  LineBadgeCheck,
 } from '../components/icons/line';
 
 // Google Places API Key from environment
@@ -53,18 +53,50 @@ function YesNo({ label, value, onChange }) {
   );
 }
 
+// sessionStorage key for a review-in-progress. Survives the login round-trip
+// (including a full-page OAuth redirect), so a user who fills the form while
+// logged out doesn't lose their work when we bounce them through /login.
+const DRAFT_KEY = 'diragon_review_draft';
+
 export default function WriteReviewPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading: authLoading } = useAuth();
 
+  // Prefill source, resolved once on mount:
+  //  1. A draft persisted before a login round-trip (highest priority), or
+  //  2. Router state passed from PropertyPage / SearchResultsPage (address context).
+  const [initial] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (raw) return { ...JSON.parse(raw), fromDraft: true };
+    } catch {
+      /* ignore malformed draft */
+    }
+    const s = location.state || {};
+    return {
+      propertyId: s.propertyId || null,
+      street: s.street || '',
+      buildingNumber: s.buildingNumber || '',
+      floor: s.floor || '',
+      apartment: s.apartment || '',
+      city: s.city || '',
+    };
+  });
+
+  // Address is locked (read-only) when we arrived with a concrete existing
+  // property. Prefilling the exact stored address prevents getOrCreateProperty
+  // from spawning a duplicate property row for the same building.
+  const lockedAddress = Boolean(initial.propertyId);
+
   // Step 1: Property Info
-  const [step, setStep] = useState(1);
-  const [street, setStreet] = useState('');
-  const [buildingNumber, setBuildingNumber] = useState('');
-  const [floor, setFloor] = useState('');
-  const [apartment, setApartment] = useState('');
-  const [city, setCity] = useState('');
+  const [step, setStep] = useState(initial.step || (initial.propertyId ? 2 : 1));
+  const [street, setStreet] = useState(initial.street || '');
+  const [buildingNumber, setBuildingNumber] = useState(initial.buildingNumber || '');
+  const [floor, setFloor] = useState(initial.floor || '');
+  const [apartment, setApartment] = useState(initial.apartment || '');
+  const [city, setCity] = useState(initial.city || '');
 
   // Google Places Autocomplete
   const [suggestions, setSuggestions] = useState([]);
@@ -73,27 +105,34 @@ export default function WriteReviewPage() {
   const autocompleteRef = useRef(null);
 
   // Step 2: Ratings
-  const [overallRating, setOverallRating] = useState(0);
-  const [maintenanceQuality, setMaintenanceQuality] = useState(0);
-  const [landlordCommunication, setLandlordCommunication] = useState(0);
-  const [contractCompliance, setContractCompliance] = useState(0);
-  const [timelyRepairs, setTimelyRepairs] = useState(0);
-  const [valueRating, setValueRating] = useState(0);
+  const [overallRating, setOverallRating] = useState(initial.overallRating || 0);
+  const [maintenanceQuality, setMaintenanceQuality] = useState(initial.maintenanceQuality || 0);
+  const [landlordCommunication, setLandlordCommunication] = useState(initial.landlordCommunication || 0);
+  const [contractCompliance, setContractCompliance] = useState(initial.contractCompliance || 0);
+  const [timelyRepairs, setTimelyRepairs] = useState(initial.timelyRepairs || 0);
+  const [valueRating, setValueRating] = useState(initial.valueRating || 0);
 
   // Step 3: Additional Details
-  const [reviewText, setReviewText] = useState('');
-  const [depositReturned, setDepositReturned] = useState(null);
-  const [contractRespected, setContractRespected] = useState(null);
-  const [repairsTimely, setRepairsTimely] = useState(null);
-  const [parkingAvailable, setParkingAvailable] = useState(null);
-  const [niceNeighbors, setNiceNeighbors] = useState(null);
-  const [nearbyAmenities, setNearbyAmenities] = useState(null);
-  const [rentAmount, setRentAmount] = useState('');
-  const [moveInDate, setMoveInDate] = useState('');
-  const [moveOutDate, setMoveOutDate] = useState('');
+  const [reviewText, setReviewText] = useState(initial.reviewText || '');
+  const [depositReturned, setDepositReturned] = useState(initial.depositReturned ?? null);
+  const [contractRespected, setContractRespected] = useState(initial.contractRespected ?? null);
+  const [repairsTimely, setRepairsTimely] = useState(initial.repairsTimely ?? null);
+  const [parkingAvailable, setParkingAvailable] = useState(initial.parkingAvailable ?? null);
+  const [niceNeighbors, setNiceNeighbors] = useState(initial.niceNeighbors ?? null);
+  const [nearbyAmenities, setNearbyAmenities] = useState(initial.nearbyAmenities ?? null);
+  const [rentAmount, setRentAmount] = useState(initial.rentAmount || '');
+  const [moveInDate, setMoveInDate] = useState(initial.moveInDate || '');
+  const [moveOutDate, setMoveOutDate] = useState(initial.moveOutDate || '');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // A restored draft has done its job — drop it so a later fresh visit starts clean.
+  useEffect(() => {
+    if (initial.fromDraft) {
+      try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+    }
+  }, [initial.fromDraft]);
 
   // Load Google Maps SDK
   const [mapsReady, setMapsReady] = useState(false);
@@ -136,7 +175,7 @@ export default function WriteReviewPage() {
 
   // Google Places Autocomplete using new API
   useEffect(() => {
-    if (!street || street.length < 3 || !mapsReady) {
+    if (lockedAddress || !street || street.length < 3 || !mapsReady) {
       setSuggestions([]);
       return;
     }
@@ -174,7 +213,7 @@ export default function WriteReviewPage() {
       cancelled = true;
       clearTimeout(timeoutId);
     };
-  }, [street, mapsReady]);
+  }, [street, mapsReady, lockedAddress]);
 
   const handleSelectPlace = async (placeId, description) => {
     if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) {
@@ -258,6 +297,27 @@ export default function WriteReviewPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Snapshot the whole in-progress review so it survives a login redirect.
+  const persistDraft = () => {
+    try {
+      sessionStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({
+          propertyId: initial.propertyId,
+          step,
+          street, buildingNumber, floor, apartment, city,
+          overallRating, maintenanceQuality, landlordCommunication,
+          contractCompliance, timelyRepairs, valueRating,
+          reviewText, depositReturned, contractRespected, repairsTimely,
+          parkingAvailable, niceNeighbors, nearbyAmenities,
+          rentAmount, moveInDate, moveOutDate,
+        })
+      );
+    } catch {
+      /* storage unavailable — the user simply re-enters after login */
+    }
+  };
+
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
 
@@ -266,8 +326,11 @@ export default function WriteReviewPage() {
       return;
     }
 
+    // Deferred login gate: anyone may fill the form; we only require auth here,
+    // at the final submit. Save progress and bounce through /login, then resume.
     if (!user) {
-      setError('חובה להיות מחובר כדי לכתוב ביקורת');
+      persistDraft();
+      navigate('/login', { state: { from: '/write-review' } });
       return;
     }
 
@@ -307,10 +370,15 @@ export default function WriteReviewPage() {
         tags
       };
 
-      const { data, error } = await createReview(reviewData);
+      const { error } = await createReview(reviewData);
       if (error) throw error;
 
-      navigate('/');
+      // Clear any lingering draft and land on the profile with a clear
+      // "received, pending approval" confirmation (ProfilePage renders state.message).
+      try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+      navigate('/profile', {
+        state: { message: 'הביקורת התקבלה וממתינה לאישור. נעדכן אתכם ברגע שתאושר ותפורסם.' },
+      });
     } catch (err) {
       logger.error('Error submitting review:', err);
       setError('שגיאה בשליחת הביקורת. אנא נסה שוב.');
@@ -332,52 +400,6 @@ export default function WriteReviewPage() {
             <div className="mt-4 text-muted">בודק הרשאות…</div>
           </div>
         </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  // Gate: not authenticated
-  if (!user) {
-    const perks = [
-      { Icon: LineLock, title: 'אנונימי לחלוטין', body: 'השם שלך לא יופיע בביקורת' },
-      { Icon: LineClock, title: 'לוקח פחות מ-5 דקות', body: 'טופס קצר עם 3 שלבים פשוטים' },
-      { Icon: LineHeart, title: 'תרומה לקהילה', body: 'עוזרים לשוכרים אחרים להימנע מהפתעות' },
-    ];
-    return (
-      <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
-        <Header />
-        <main id="main-content" className="flex-1 grid place-items-center px-5 py-14 lg:py-20">
-          <div className="w-full max-w-lg bg-white rounded-2xl shadow-card border border-black/5 p-8 text-center">
-            <span className="mx-auto grid place-items-center w-16 h-16 rounded-2xl bg-petrol text-white shadow-lift">
-              <LineDoc width="30" height="30" />
-            </span>
-            <h1 className="mt-5 font-heading font-black text-2xl text-ink">שתפו את החוויה שלכם</h1>
-            <p className="mt-2 text-muted">הביקורת שלכם עוזרת לשוכרים אחרים לקבל החלטות מושכלות</p>
-
-            <div className="mt-7 text-right space-y-3">
-              {perks.map(({ Icon, title, body }) => (
-                <div key={title} className="flex items-center gap-3 rounded-xl bg-canvas border border-black/5 p-4">
-                  <span className="grid place-items-center w-10 h-10 rounded-xl bg-petrol-50 text-petrol shrink-0">
-                    <Icon width="20" height="20" />
-                  </span>
-                  <div>
-                    <div className="font-semibold text-ink text-sm">{title}</div>
-                    <div className="text-xs text-muted">{body}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => navigate('/login', { state: { from: '/write-review' } })}
-              className="btn w-full mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-cta text-white px-6 py-3.5 font-bold shadow-[0_10px_24px_-10px_rgba(224,152,46,0.8)] hover:bg-amber-600"
-            >
-              התחברו כדי לכתוב ביקורת
-            </button>
-            <p className="text-xs text-muted mt-3">ההתחברות נדרשת רק למניעת ספאם</p>
-          </div>
-        </main>
         <Footer />
       </div>
     );
@@ -439,6 +461,19 @@ export default function WriteReviewPage() {
             </div>
           </div>
 
+          {/* Logged-out notice: fill freely now, sign in only at the end. */}
+          {!user && (
+            <div className="mb-6 rounded-2xl bg-petrol-50 border border-petrol/15 p-4 flex items-start gap-3">
+              <span className="grid place-items-center w-9 h-9 rounded-xl bg-petrol text-white shrink-0">
+                <LineLock width="18" height="18" />
+              </span>
+              <div className="text-sm">
+                <div className="font-semibold text-ink">אפשר להתחיל למלא כבר עכשיו</div>
+                <div className="text-muted">נבקש להתחבר רק בסוף, לפני השליחה — כדי למנוע ספאם. הפרטים שתמלאו יישמרו.</div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl shadow-card border border-black/5 p-6 sm:p-8 animate-scale-in">
             {/* Step 1 */}
             {step === 1 && (
@@ -451,6 +486,12 @@ export default function WriteReviewPage() {
                 </div>
 
                 <div className="space-y-5">
+                  {lockedAddress && (
+                    <div className="rounded-xl bg-petrol-50 border border-petrol/15 p-3 flex items-start gap-2">
+                      <LineLock className="text-petrol shrink-0 mt-0.5" width="16" height="16" />
+                      <p className="text-sm text-petrol">הכתובת נטענה מדף הדירה — אין צורך להזין שוב.</p>
+                    </div>
+                  )}
                   <div className="relative" ref={autocompleteRef}>
                     <label className="block text-sm font-semibold text-ink mb-2">{t('property.street')} <span className="text-red-500">*</span></label>
                     <input
@@ -459,7 +500,8 @@ export default function WriteReviewPage() {
                       onFocus={() => setShowSuggestions(true)}
                       placeholder="התחילו להקליד כתובת…"
                       required
-                      className={inputClass}
+                      readOnly={lockedAddress}
+                      className={`${inputClass}${lockedAddress ? ' bg-black/5 text-muted cursor-not-allowed' : ''}`}
                     />
 
                     {isLoadingPlaces && (
@@ -495,7 +537,7 @@ export default function WriteReviewPage() {
                       </div>
                     )}
 
-                    {(!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) ? (
+                    {lockedAddress ? null : (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY.includes('XXX')) ? (
                       <div className="mt-2 p-3 rounded-xl bg-amber-100 border border-amber/20 flex items-start gap-2">
                         <LineAlert className="text-amber-600 shrink-0 mt-0.5" width="16" height="16" />
                         <div className="text-sm text-amber-600">
@@ -512,23 +554,23 @@ export default function WriteReviewPage() {
 
                   <div>
                     <label className="block text-sm font-semibold text-ink mb-2">{t('property.building')} <span className="text-red-500">*</span></label>
-                    <input value={buildingNumber} onChange={(e) => setBuildingNumber(e.target.value)} placeholder="למשל: 123" required className={inputClass} />
+                    <input value={buildingNumber} onChange={(e) => setBuildingNumber(e.target.value)} placeholder="למשל: 123" required readOnly={lockedAddress} className={`${inputClass}${lockedAddress ? ' bg-black/5 text-muted cursor-not-allowed' : ''}`} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold text-ink mb-2">{t('property.floor')}</label>
-                      <input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="למשל: 3" className={inputClass} />
+                      <input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder="למשל: 3" readOnly={lockedAddress} className={`${inputClass}${lockedAddress ? ' bg-black/5 text-muted cursor-not-allowed' : ''}`} />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-ink mb-2">{t('property.apartment')}</label>
-                      <input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder="למשל: 12" className={inputClass} />
+                      <input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder="למשל: 12" readOnly={lockedAddress} className={`${inputClass}${lockedAddress ? ' bg-black/5 text-muted cursor-not-allowed' : ''}`} />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-ink mb-2">{t('property.city')} <span className="text-red-500">*</span></label>
-                    <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="למשל: תל אביב" required className={inputClass} />
+                    <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="למשל: תל אביב" required readOnly={lockedAddress} className={`${inputClass}${lockedAddress ? ' bg-black/5 text-muted cursor-not-allowed' : ''}`} />
                   </div>
                 </div>
 
@@ -623,16 +665,16 @@ export default function WriteReviewPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <YesNo label="האם הפיקדון הוחזר במלואו?" value={depositReturned} onChange={setDepositReturned} />
-                    <YesNo label="האם בעל הבית עמד בתנאי החוזה?" value={contractRespected} onChange={setContractRespected} />
-                    <YesNo label="האם תיקונים בוצעו בזמן סביר?" value={repairsTimely} onChange={setRepairsTimely} />
+                    <YesNo label={t('writeReview.q.deposit')} value={depositReturned} onChange={setDepositReturned} />
+                    <YesNo label={t('writeReview.q.contract')} value={contractRespected} onChange={setContractRespected} />
+                    <YesNo label={t('writeReview.q.repairs')} value={repairsTimely} onChange={setRepairsTimely} />
                   </div>
 
                   <div className="space-y-4 pt-2">
                     <h3 className="font-heading font-bold text-lg text-ink">על השכונה</h3>
-                    <YesNo label="האם יש חניה זמינה באזור?" value={parkingAvailable} onChange={setParkingAvailable} />
-                    <YesNo label="האם השכנים נעימים?" value={niceNeighbors} onChange={setNiceNeighbors} />
-                    <YesNo label="האם יש חנויות ושירותים בקרבת מקום?" value={nearbyAmenities} onChange={setNearbyAmenities} />
+                    <YesNo label={t('writeReview.q.parking')} value={parkingAvailable} onChange={setParkingAvailable} />
+                    <YesNo label={t('writeReview.q.neighbors')} value={niceNeighbors} onChange={setNiceNeighbors} />
+                    <YesNo label={t('writeReview.q.amenities')} value={nearbyAmenities} onChange={setNearbyAmenities} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">

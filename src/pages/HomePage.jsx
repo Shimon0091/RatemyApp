@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
-import CountUp from '../components/CountUp'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 import { getTopRatedProperties } from '../lib/database'
 import { supabase } from '../lib/supabase'
@@ -11,9 +10,6 @@ import { logger } from '../utils/logger'
 
 const HERO_IMAGE =
   'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1600&q=80'
-
-// TODO: placeholder social-proof numbers per owner; revisit before merging to main (real counts are ~19 properties / ~24 reviews).
-const DISPLAY_STATS = { reviews: 2140, properties: 680, neighborhoods: 12 }
 
 // ── small inline icons (match mockup F line-art exactly) ──
 const IconPin = (p) => (
@@ -79,8 +75,7 @@ export default function HomePage() {
       if (reviewsError) logger.error('Error loading reviews:', reviewsError)
       if (propertiesError) logger.error('Error loading properties:', propertiesError)
 
-      // Real DB counts still power the top-rated cards / "more properties" link.
-      // The stat BAND uses DISPLAY_STATS (owner-chosen social-proof numbers).
+      // Real DB counts power the top-rated cards / "more properties" link.
       setStats({
         totalReviews: reviewsCount || 0,
         totalProperties: propertiesCount || 0,
@@ -158,7 +153,7 @@ export default function HomePage() {
           <div className="relative z-20 max-w-7xl mx-auto px-5 lg:px-8 pt-24 pb-40 lg:pt-32 lg:pb-52">
             <div className="max-w-full sm:max-w-2xl mr-0 text-right reveal">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur text-white/95 border border-white/25 px-4 py-1.5 text-sm font-semibold mb-6">
-                <span className="w-2 h-2 rounded-full bg-amber" /> כל ביקורת מאומתת
+                <span className="w-2 h-2 rounded-full bg-amber" /> {t('hero.badgeModerated')}
               </span>
               <h1 className="text-white font-heading font-black leading-[1.08] text-[2rem] sm:text-5xl lg:text-[3.5rem] break-words">
                 דירגון: המקום שלך למצוא<br className="hidden sm:block" /> ולדרג דירות להשכרה.
@@ -245,7 +240,7 @@ export default function HomePage() {
 
           {/* trust chips */}
           <div className="reveal mt-6 flex flex-wrap justify-center gap-3 text-sm">
-            {['אנונימי לחלוטין', 'ביקורות מאומתות', 'חינם לחלוטין'].map((label) => (
+            {[t('trust.chipAnonymous'), t('trust.chipModerated'), t('trust.chipFree')].map((label) => (
               <span
                 key={label}
                 className="inline-flex items-center gap-2 rounded-full bg-white border border-black/5 shadow-sm px-4 py-2 font-semibold text-ink"
@@ -256,21 +251,26 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ============ STATS COUNTERS ============ */}
+        {/* ============ COLD-START — honest, recruiting band ============ */}
         <section className="mt-20 lg:mt-24">
           <div className="max-w-5xl mx-auto px-5 lg:px-8">
-            <div className="reveal grid grid-cols-3 rounded-2xl bg-petrol text-white overflow-hidden shadow-lift">
-              <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center border-l border-white/10">
-                <CountUp value={DISPLAY_STATS.reviews} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
-                <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">{t('stats.reviews')}</div>
-              </div>
-              <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center border-l border-white/10">
-                <CountUp value={DISPLAY_STATS.properties} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
-                <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">{t('stats.properties')}</div>
-              </div>
-              <div className="min-w-0 p-4 sm:p-7 lg:p-9 text-center">
-                <CountUp value={DISPLAY_STATS.neighborhoods} className="block font-heading font-black text-2xl sm:text-3xl lg:text-5xl" />
-                <div className="mt-1 text-white/75 text-xs sm:text-sm lg:text-base">שכונות</div>
+            <div className="reveal relative overflow-hidden rounded-2xl bg-petrol text-white shadow-lift px-6 py-12 sm:px-12 sm:py-14 text-center">
+              <span aria-hidden="true" className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
+              <span aria-hidden="true" className="pointer-events-none absolute -bottom-12 -left-8 w-48 h-48 rounded-full bg-white/5" />
+              <div className="relative">
+                <h2 className="font-heading font-black text-2xl sm:text-3xl lg:text-4xl leading-tight max-w-2xl mx-auto">
+                  {t('coldStart.headline')}
+                </h2>
+                <p className="mt-4 text-white/85 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+                  {t('coldStart.subline')}
+                </p>
+                <Link
+                  to="/write-review"
+                  className="btn mt-8 inline-flex items-center gap-2 rounded-xl bg-amber-cta text-white px-7 py-3.5 font-bold shadow-[0_10px_24px_-8px_rgba(224,152,46,0.8)] hover:bg-amber-600"
+                >
+                  {t('coldStart.cta')}
+                  <IconArrowLeft width="18" height="18" />
+                </Link>
               </div>
             </div>
           </div>
@@ -287,7 +287,7 @@ export default function HomePage() {
             <div className="mt-14 grid md:grid-cols-3 gap-6">
               {[
                 { n: 1, Icon: IconPin, title: 'חפש את הדירה', body: 'הקלד כתובת או שם שכונה ומצא את הדירה שמעניינת אותך תוך שניות.' },
-                { n: 2, Icon: IconDoc, title: 'קרא ביקורות אמיתיות', body: 'ביקורות מאומתות משוכרים קודמים על מהימנות, תחזוקה ותמורה למחיר.' },
+                { n: 2, Icon: IconDoc, title: 'קרא ביקורות אמיתיות', body: 'ביקורות משוכרים אמיתיים, בעילום שם — כל אחת עוברת בדיקת מנהל לפני שהיא עולה.' },
                 { n: 3, Icon: IconBadgeCheck, title: 'קבל החלטה מושכלת', body: 'חתום על חוזה בביטחון — בלי הפתעות ובלי חרטות.' },
               ].map((step) => (
                 <div key={step.n} className="reveal text-center px-6">
