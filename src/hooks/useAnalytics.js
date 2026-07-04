@@ -4,6 +4,7 @@ import {
   loadGA4,
   trackPageView,
   hasAnalyticsConsent,
+  syncAnalyticsConsent,
   CONSENT_EVENT,
 } from '../lib/analytics'
 
@@ -27,8 +28,10 @@ export function useAnalytics() {
     }
 
     const handleConsentChange = () => {
+      // Apply the new choice immediately: accept loads GA4; decline (withdrawal)
+      // sets Google's opt-out flag so any already-loaded GA stops sending hits.
+      syncAnalyticsConsent()
       if (hasAnalyticsConsent()) {
-        loadGA4()
         // Record the page the user was on when they accepted (route did not change).
         trackPageView(window.location.pathname + window.location.search)
       }

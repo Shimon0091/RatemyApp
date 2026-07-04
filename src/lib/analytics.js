@@ -15,7 +15,11 @@ const MEASUREMENT_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID
 export const COOKIE_CONSENT_KEY = 'diragon_cookie_consent'
 export const CONSENT_ACCEPTED = 'accepted'
 export const CONSENT_DECLINED = 'declined'
+// Dispatched when the stored consent value changes (accept / decline).
 export const CONSENT_EVENT = 'diragon:cookie-consent'
+// Dispatched (e.g. by the footer "ניהול עוגיות" link) to re-open the banner so
+// the user can review or withdraw a previously given consent at any time.
+export const CONSENT_OPEN_EVENT = 'diragon:open-consent'
 
 // Guard so gtag.js is injected at most once per session.
 let gaLoaded = false
@@ -76,6 +80,28 @@ export function loadGA4() {
   } catch (error) {
     gaLoaded = false
     logger.error('Failed to load GA4', error)
+  }
+}
+
+/**
+ * Reflect the current stored consent onto GA4 at runtime.
+ *
+ * On accept: clears Google's opt-out flag and (idempotently) loads GA4.
+ * On decline / no choice: sets Google's official per-property opt-out flag
+ * `ga-disable-<ID>` = true, so that if a user WITHDRAWS consent mid-session —
+ * after gtag.js was already injected earlier — no further hits are sent, with
+ * no page reload required. This keeps withdrawal as effective as acceptance
+ * (Amendment 13 §8C symmetry). Safe no-op when no Measurement ID is configured.
+ */
+export function syncAnalyticsConsent() {
+  if (!MEASUREMENT_ID) return
+  if (typeof window === 'undefined') return
+
+  if (hasAnalyticsConsent()) {
+    window[`ga-disable-${MEASUREMENT_ID}`] = false
+    loadGA4()
+  } else {
+    window[`ga-disable-${MEASUREMENT_ID}`] = true
   }
 }
 

@@ -1,10 +1,17 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Icon from './icons'
+import { CONSENT_OPEN_EVENT } from '../lib/analytics'
 
 export default function Footer() {
   const { t } = useTranslation()
   const currentYear = new Date().getFullYear()
+
+  // Re-open the cookie banner so a user can review or withdraw consent at any
+  // time — as easily as it was given (Amendment 13 §8C symmetry).
+  const openCookieConsent = () => {
+    window.dispatchEvent(new Event(CONSENT_OPEN_EVENT))
+  }
 
   return (
     <footer className="bg-petrol-700 text-white mt-auto font-body">
@@ -61,6 +68,15 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm text-white/70">
               <li><Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link></li>
               <li><Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link></li>
+              <li>
+                <button
+                  type="button"
+                  onClick={openCookieConsent}
+                  className="text-right hover:text-white transition-colors"
+                >
+                  {t('footer.manageCookies')}
+                </button>
+              </li>
               <li><Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link></li>
             </ul>
           </div>
