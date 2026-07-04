@@ -515,7 +515,8 @@ export async function getReports(status = 'pending') {
       *,
       reviews (
         *,
-        properties (street, building_number, city)
+        properties (street, building_number, floor, apartment, city),
+        user_profiles (display_name, avatar_url)
       )
     `)
     .eq('status', status)
