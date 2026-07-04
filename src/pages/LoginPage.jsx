@@ -142,8 +142,8 @@ export default function LoginPage() {
     'placeholder:text-muted/70 outline-none transition-colors focus:border-petrol focus:ring-2 focus:ring-petrol/20'
 
   const trustItems = [
-    { Icon: LineLock, label: 'מאובטח לחלוטין' },
-    { Icon: LineBadgeCheck, label: 'ביקורות מאומתות' },
+    { Icon: LineLock, label: 'מאובטח' },
+    { Icon: LineBadgeCheck, label: 'נבדק לפני פרסום' },
     { Icon: LineHeart, label: 'חינם לחלוטין' },
   ]
 
