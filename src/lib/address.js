@@ -1,5 +1,6 @@
 // address.js — building-key normalization, the JS twin of the SQL functions in
-// migration_add_building_key.sql (diragon_normalize_part / diragon_building_key).
+// migration_add_building_key.sql (diragon_normalize_part / diragon_building_key),
+// hardened for bidi/directional marks in migration_building_key_v2_bidi.sql.
 //
 // WHY THIS MUST MATCH THE DB EXACTLY:
 // The DB stores a GENERATED `building_key` per property row and groups the
@@ -11,10 +12,23 @@
 
 // --- Character sets ---
 
-// step 3 — removed entirely. Mirrors normalizeSearchText() in database.js, plus
-// the pipe (the key separator), which must never survive inside a part:
-//   geresh U+05F3, gershayim U+05F4, apostrophe U+0027, backtick U+0060, pipe U+007C
-const REMOVE_CHARS = /[׳״'`|]/g;
+// step 3 — removed entirely. KEEP IN SYNC with the removal set in SQL
+// diragon_normalize_part() (migration_building_key_v2_bidi.sql). Mirrors
+// normalizeSearchText() in database.js, plus the pipe and the bidi/directional
+// formatting characters:
+//   geresh U+05F3, gershayim U+05F4, apostrophe U+0027, backtick U+0060,
+//   pipe U+007C (the key separator; must never survive inside a part),
+//   LRM U+200E, RLM U+200F,
+//   LRE U+202A, RLE U+202B, PDF U+202C, LRO U+202D, RLO U+202E,
+//   LRI U+2066, RLI U+2067, FSI U+2068, PDI U+2069.
+// The bidi chars are invisible formatting marks that Google Places / OS
+// keyboards inject into Hebrew (RTL) strings. If not stripped, the same
+// building typed once with and once without the mark gets two different keys
+// and fails to merge (under-merge). They are REMOVED (not turned into space) so
+// they leave no gap, exactly like the SQL twin. They use \u escapes (not
+// literals) to keep this source free of invisible characters — same reasoning
+// as NBSP in DASH_CHARS below.
+const REMOVE_CHARS = /[\u05F3\u05F4'`|\u200E\u200F\u202A-\u202E\u2066-\u2069]/g;
 
 // step 4 — dash-like chars turned into a single space each:
 //   hyphen-minus U+002D, en dash U+2013, em dash U+2014, Hebrew maqaf U+05BE.
@@ -43,7 +57,7 @@ export const CITY_ALIASES = {
  * Ordered steps — output identical to SQL diragon_normalize_part():
  *   1. coalesce null/undefined -> ''
  *   2. lowercase (Latin only; Hebrew has no case)
- *   3. remove quote/separator chars
+ *   3. remove quote/separator/bidi chars
  *   4. turn dash-like chars into a space
  *   5. collapse whitespace runs (incl. NBSP) to a single space
  *   6. trim
