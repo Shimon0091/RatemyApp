@@ -7,10 +7,12 @@ import Footer from '../components/Footer'
 import Pagination from '../components/Pagination'
 import SearchBar from '../components/SearchBar'
 import { useScrollReveal } from '../hooks/useScrollReveal'
-import { searchProperties, getNeighborhoods } from '../lib/database'
+import { searchBuildings, getNeighborhoods } from '../lib/database'
+import { buildingKeyToPath } from '../lib/address'
+import { coerceRating } from '../lib/buildingSummary'
 import {
   LinePin, LineStarSolid, LineSearch, LineFilter, LineBuilding,
-  LineArrowLeft, LineEdit, LineAlert, LineX, LineCheck,
+  LineArrowLeft, LineEdit, LineAlert, LineX, LineCheck, LineChat,
 } from '../components/icons/line'
 
 // Timeout wrapper for async operations
@@ -23,13 +25,26 @@ function withTimeout(promise, ms) {
   ])
 }
 
+// buildings_summary exposes ONLY location metrics at building level (metric
+// separation). Landlord-dependent tags stay per-apartment on PropertyPage.
+function getBuildingTags(building, t) {
+  const tags = []
+  if (building.parking_available_count > 0) tags.push(t('building.metricParking'))
+  if (building.nice_neighbors_count > 0) tags.push(t('building.metricNeighbors'))
+  if (building.nearby_amenities_count > 0) tags.push(t('building.metricAmenities'))
+  return tags.slice(0, 2)
+}
+
+// Valid sort columns for the buildings_summary VIEW (no created_at column here).
+const DEFAULT_SORT = 'total_reviews'
+
 export default function SearchResultsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') || ''
 
-  const [properties, setProperties] = useState([])
+  const [buildings, setBuildings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [totalPages, setTotalPages] = useState(0)
@@ -40,7 +55,7 @@ export default function SearchResultsPage() {
   const [minRating, setMinRating] = useState(null)
   const [neighborhood, setNeighborhood] = useState(null)
   const [minReviews, setMinReviews] = useState(null)
-  const [sortBy, setSortBy] = useState('overall_rating')
+  const [sortBy, setSortBy] = useState(DEFAULT_SORT)
   const [neighborhoods, setNeighborhoods] = useState([])
   const [showFilters, setShowFilters] = useState(false)
 
@@ -65,7 +80,7 @@ export default function SearchResultsPage() {
 
       try {
         const result = await withTimeout(
-          searchProperties(query || '', {
+          searchBuildings(query || '', {
             minRating,
             neighborhood,
             minReviews,
@@ -83,7 +98,7 @@ export default function SearchResultsPage() {
           console.error('Search error:', result.error)
         }
 
-        setProperties(result.data || [])
+        setBuildings(result.data || [])
         setTotalCount(result.count ?? 0)
         setTotalPages(result.totalPages || 0)
       } catch (err) {
@@ -106,20 +121,20 @@ export default function SearchResultsPage() {
   }, [query, minRating, neighborhood, minReviews, sortBy, currentPage, t])
 
   // Re-scan reveal targets whenever the result set changes.
-  useScrollReveal([loading, properties.length, showFilters])
+  useScrollReveal([loading, buildings.length, showFilters])
 
   const retrySearch = useCallback(() => {
     setError('')
     setLoading(true)
     withTimeout(
-      searchProperties(query || '', {
+      searchBuildings(query || '', {
         minRating, neighborhood, minReviews, sortBy,
         ascending: false, page: currentPage, pageSize: 12
       }),
       15000
     )
       .then(result => {
-        setProperties(result.data || [])
+        setBuildings(result.data || [])
         setTotalCount(result.count ?? 0)
         setTotalPages(result.totalPages || 0)
       })
@@ -142,20 +157,12 @@ export default function SearchResultsPage() {
     setMinRating(null)
     setNeighborhood(null)
     setMinReviews(null)
-    setSortBy('overall_rating')
+    setSortBy(DEFAULT_SORT)
     setCurrentPage(1)
   }
 
-  const hasActiveFilters = minRating || neighborhood || minReviews || sortBy !== 'overall_rating'
+  const hasActiveFilters = minRating || neighborhood || minReviews || sortBy !== DEFAULT_SORT
   const activeFilterCount = [minRating, neighborhood, minReviews].filter(Boolean).length
-
-  const getPositiveTags = (property) => {
-    const tags = []
-    if (property.deposit_returned_count > 0) tags.push(t('tags.depositReturned'))
-    if (property.maintenance_timely_count > 0) tags.push(t('tags.maintenanceTimely'))
-    if (property.contract_respected_count > 0) tags.push(t('tags.contractRespected'))
-    return tags.slice(0, 2)
-  }
 
   const selectClass =
     'w-full rounded-xl bg-canvas border border-black/10 px-4 py-2.5 text-[15px] text-ink ' +
@@ -164,8 +171,8 @@ export default function SearchResultsPage() {
   return (
     <div className="bg-canvas text-ink font-body min-h-screen flex flex-col overflow-x-hidden">
       <Seo
-        title="חיפוש דירות וביקורות - דירגון"
-        description="חפשו דירות לפי כתובת או עיר וקראו ביקורות אמיתיות של שוכרים קודמים לפני שאתם שוכרים."
+        title="חיפוש בניינים וביקורות - דירגון"
+        description="חפשו בניינים לפי כתובת או עיר וקראו ביקורות אמיתיות של שוכרים קודמים לפני שאתם שוכרים."
         canonicalPath="/search"
       />
       <Header />
@@ -175,20 +182,21 @@ export default function SearchResultsPage() {
         <section className="bg-petrol text-white">
           <div className="max-w-6xl mx-auto px-5 lg:px-8 pt-12 pb-10 lg:pt-14 lg:pb-12">
             <h1 className="font-heading font-black text-3xl lg:text-4xl leading-tight">
-              {query ? t('search.results') : 'כל הדירות'}
+              {query ? t('search.results') : t('search.allBuildings')}
             </h1>
             <p className="mt-2.5 text-white/80 text-base lg:text-lg">
               {query ? (
                 <>
                   {t('search.found')}{' '}
                   <span className="font-bold text-white">{loading ? '…' : totalCount.toLocaleString('he-IL')}</span>{' '}
-                  {t('search.propertiesFor')}{' '}
+                  {t('search.buildingsFor')}{' '}
                   <span className="font-bold text-amber">"{query}"</span>
                 </>
               ) : (
-                <>{loading ? '…' : totalCount.toLocaleString('he-IL')} דירות מדורגות — חפשו כתובת או עיינו ברשימה</>
+                <>{loading ? '…' : totalCount.toLocaleString('he-IL')} {t('search.buildingsRated')}</>
               )}
             </p>
+            <p className="mt-1.5 text-white/60 text-sm">{t('search.buildingsHint')}</p>
 
             {/* search bar — shared component with Google Places autocomplete */}
             <SearchBar
@@ -205,7 +213,7 @@ export default function SearchResultsPage() {
           {/* Filters toggle */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <p className="text-muted text-sm hidden sm:block">
-              {!loading && `${totalCount.toLocaleString('he-IL')} תוצאות`}
+              {!loading && `${totalCount.toLocaleString('he-IL')} ${t('search.buildingsFound')}`}
             </p>
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -275,9 +283,8 @@ export default function SearchResultsPage() {
                     onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1) }}
                     className={selectClass}
                   >
-                    <option value="overall_rating">{t('property.sortHighRating')}</option>
                     <option value="total_reviews">{t('property.sortHelpful')}</option>
-                    <option value="created_at">{t('property.sortNewest')}</option>
+                    <option value="overall_rating">{t('property.sortHighRating')}</option>
                   </select>
                 </div>
               </div>
@@ -331,61 +338,87 @@ export default function SearchResultsPage() {
           {/* Results */}
           {!loading && !error && (
             <>
-              {properties.length > 0 ? (
+              {buildings.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {properties.map((property, i) => (
-                      <Link
-                        key={property.id}
-                        to={`/property/${property.id}`}
-                        className="reveal lift group bg-white rounded-2xl shadow-card border border-black/5 overflow-hidden flex flex-col"
-                      >
-                        {/* uniform gray placeholder — no photo field in DB yet */}
-                        <div className="relative h-44 grid place-items-center bg-[#EFEDE8]">
-                          <div className="text-center text-muted">
-                            <LineBuilding className="mx-auto" width="32" height="32" />
-                            <span className="block mt-1.5 text-sm font-medium">אין תמונה</span>
-                          </div>
-                          {property.overall_rating > 0 && (
-                            <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur text-amber-600 px-2.5 py-1 text-sm font-bold shadow-sm">
-                              <LineStarSolid className="text-amber" width="14" height="14" />
-                              {property.overall_rating.toFixed(1)}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="p-6 flex flex-col flex-1">
-                          <div className="flex items-start gap-2">
-                            <LinePin className="text-petrol shrink-0 mt-1" width="18" height="18" />
-                            <h3 className="font-heading font-bold text-lg text-ink leading-snug group-hover:text-petrol transition-colors">
-                              {property.street} {property.building_number}
-                            </h3>
-                          </div>
-                          <p className="text-muted text-sm mt-1.5">
-                            {property.neighborhood ? `${property.neighborhood} · ` : ''}{property.city}
-                          </p>
-                          <p className="text-muted text-sm mt-1">
-                            {property.floor ? `קומה ${property.floor} · ` : ''}
-                            <span className="font-semibold text-ink">{property.total_reviews || 0}</span> {t('search.reviews')}
-                          </p>
-
-                          {getPositiveTags(property).length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-4">
-                              {getPositiveTags(property).map((tag) => (
-                                <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-petrol-50 text-petrol text-xs font-semibold px-3 py-1">
-                                  <LineCheck width="12" height="12" /> {tag}
-                                </span>
-                              ))}
+                    {buildings.map((building) => {
+                      const rating = coerceRating(building.overall_rating)
+                      const aptCount = Number(building.apartment_count) || 0
+                      const reviewCount = Number(building.total_reviews) || 0
+                      const tags = getBuildingTags(building, t)
+                      return (
+                        <Link
+                          key={building.building_key}
+                          to={buildingKeyToPath(building.building_key)}
+                          className="reveal lift group bg-white rounded-2xl shadow-card border border-black/5 overflow-hidden flex flex-col"
+                        >
+                          {/* uniform gray placeholder — no photo field in the VIEW yet */}
+                          <div className="relative h-44 grid place-items-center bg-[#EFEDE8]">
+                            <div className="text-center text-muted">
+                              <LineBuilding className="mx-auto" width="32" height="32" />
+                              <span className="block mt-1.5 text-sm font-medium">אין תמונה</span>
                             </div>
-                          )}
+                            {rating != null ? (
+                              <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/95 backdrop-blur text-amber-600 px-2.5 py-1 text-sm font-bold shadow-sm">
+                                <LineStarSolid className="text-amber" width="14" height="14" />
+                                {rating.toFixed(1)}
+                              </span>
+                            ) : reviewCount === 0 ? (
+                              // "בניין חדש" pill — never a fabricated 0.0. Shown ONLY when
+                              // there are genuinely no reviews; below-threshold buildings
+                              // (overall gated to NULL) rely on the review-count pill in the
+                              // meta row so they are not mislabeled as new.
+                              <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-600 px-2.5 py-1 text-xs font-bold shadow-sm">
+                                {t('search.newBuilding')}
+                              </span>
+                            ) : null}
+                          </div>
 
-                          <span className="mt-5 pt-4 border-t border-black/5 inline-flex items-center justify-between text-petrol font-semibold text-sm">
-                            קרא ביקורות
-                            <LineArrowLeft width="16" height="16" className="transition-transform group-hover:-translate-x-1" />
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
+                          <div className="p-6 flex flex-col flex-1">
+                            <div className="flex items-start gap-2">
+                              <LinePin className="text-petrol shrink-0 mt-1" width="18" height="18" />
+                              <h3 className="font-heading font-bold text-lg text-ink leading-snug group-hover:text-petrol transition-colors">
+                                {building.street} {building.building_number}
+                              </h3>
+                            </div>
+                            <p className="text-muted text-sm mt-1.5">
+                              {building.neighborhood ? `${building.neighborhood} · ` : ''}{building.city}
+                            </p>
+
+                            {/* KEY FIX: building meta row — units + reviews as pills */}
+                            <div className="flex flex-wrap gap-2 mt-4">
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas border border-black/5 text-ink text-xs font-semibold px-3 py-1.5">
+                                <LineBuilding className="text-petrol" width="14" height="14" />
+                                {aptCount.toLocaleString('he-IL')} {t('search.aptsRegistered')}
+                              </span>
+                              <span className={`inline-flex items-center gap-1.5 rounded-full bg-canvas border border-black/5 text-xs font-semibold px-3 py-1.5 ${reviewCount > 0 ? 'text-ink' : 'text-muted'}`}>
+                                <LineChat className={reviewCount > 0 ? 'text-petrol' : ''} width="14" height="14" />
+                                {reviewCount.toLocaleString('he-IL')} {t('search.reviews')}
+                              </span>
+                            </div>
+
+                            {reviewCount > 0 ? (
+                              tags.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {tags.map((tag) => (
+                                    <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-petrol-50 text-petrol text-xs font-semibold px-3 py-1">
+                                      <LineCheck width="12" height="12" /> {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )
+                            ) : (
+                              <p className="text-muted text-sm mt-4 leading-relaxed">{t('search.noReviewsInBuilding')}</p>
+                            )}
+
+                            <span className="mt-5 pt-4 border-t border-black/5 inline-flex items-center justify-between text-petrol font-semibold text-sm">
+                              {t('search.viewBuilding')}
+                              <LineArrowLeft width="16" height="16" className="transition-transform group-hover:-translate-x-1" />
+                            </span>
+                          </div>
+                        </Link>
+                      )
+                    })}
                   </div>
 
                   <Pagination
@@ -400,11 +433,10 @@ export default function SearchResultsPage() {
                     <LineEdit width="30" height="30" />
                   </span>
                   <h3 className="mt-6 font-heading font-extrabold text-2xl text-ink">
-                    עדיין אין ביקורות על כתובת זו
+                    {t('search.noBuildingsTitle')}
                   </h3>
                   <p className="mt-3 text-muted leading-relaxed">
-                    לא נמצאו ביקורות עבור "{query}".<br />
-                    גרתם בכתובת הזו? היו הראשונים לשתף את החוויה שלכם.
+                    {t('search.noBuildingsBody', { query })}
                   </p>
                   <button
                     onClick={() => navigate('/write-review', { state: { street: query } })}

@@ -7,6 +7,7 @@ import Footer from '../components/Footer'
 import ReviewCard from '../components/ReviewCard'
 import { useScrollReveal } from '../hooks/useScrollReveal'
 import { getProperty, getPropertyReviews } from '../lib/database'
+import { addressToBuildingPath } from '../lib/address'
 import { logger } from '../utils/logger'
 import {
   LinePin, LineBuilding, LineStarSolid, LineArrowLeft, LineChevronLeft,
@@ -178,6 +179,12 @@ export default function PropertyPage() {
   const fullAddress = [addressLine, property.city].filter(Boolean).join(', ')
   const hasRatings = property.total_reviews > 0 && property.overall_rating > 0
 
+  const buildingPath = addressToBuildingPath(property.street, property.building_number, property.city)
+  const aptCrumb = [
+    property.floor && `${t('property.floor')} ${property.floor}`,
+    property.apartment && `${t('property.apartment')} ${property.apartment}`,
+  ].filter(Boolean).join(' · ')
+
   const seoTitle = `${fullAddress} - ביקורות ודירוג דירה | דירגון`
   const seoDescription = hasRatings
     ? `דירוג ${(property.overall_rating || 0).toFixed(1)} מתוך 5 על סמך ${property.total_reviews} ביקורות של שוכרים על ${fullAddress}. קראו חוות דעת אמיתיות בדירגון.`
@@ -243,7 +250,15 @@ export default function PropertyPage() {
           <LineChevronLeft width="14" height="14" />
           <Link to="/search" className="hover:text-petrol transition-colors">{t('footer.searchProperties')}</Link>
           <LineChevronLeft width="14" height="14" />
-          <span className="text-ink font-semibold">{property.street} {property.building_number}</span>
+          {aptCrumb ? (
+            <>
+              <Link to={buildingPath} className="hover:text-petrol transition-colors">{property.street} {property.building_number}</Link>
+              <LineChevronLeft width="14" height="14" />
+              <span className="text-ink font-semibold">{aptCrumb}</span>
+            </>
+          ) : (
+            <span className="text-ink font-semibold">{property.street} {property.building_number}</span>
+          )}
         </nav>
 
         {/* ============ PROPERTY HEADER ============ */}
@@ -277,6 +292,14 @@ export default function PropertyPage() {
                     )}
                     {property.city}
                   </p>
+                  <Link
+                    to={buildingPath}
+                    className="group mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-petrol hover:text-petrol-700 transition-colors"
+                  >
+                    <LineBuilding width="16" height="16" />
+                    {t('property.partOfBuilding')}
+                    <LineArrowLeft width="15" height="15" className="transition-transform group-hover:-translate-x-1" />
+                  </Link>
                 </div>
               </div>
 
