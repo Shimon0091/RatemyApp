@@ -96,6 +96,15 @@
     "niceNeighbors": "Nice Neighbors",
     "nearbyAmenities": "Near Shops/Services"
   },
+  "writeReview": {
+    "guidance": {
+      "factTitle": "Write from your experience — not accusations.",
+      "factBody": " Describe facts that happened to you (\"the deposit was returned two months late\", \"repairs were not carried out despite requests\") and your opinion of the experience. Avoid accusing anyone of a crime (\"crook\", \"thief\") or using offensive labels.",
+      "privacyTitle": "Do not identify a private individual:",
+      "privacyBody": " Do not include a full name, phone number, ID number or personal details of the landlord. The rating refers to the address and the property — not to a person.",
+      "helper": "Tip: a factual, to-the-point review helps future renters — and protects you too."
+    }
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

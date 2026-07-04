@@ -651,6 +651,24 @@ export default function WriteReviewPage() {
                     <label className="block text-sm font-semibold text-ink mb-2">
                       {t('review.reviewText')} <span className="text-red-500">*</span>
                     </label>
+
+                    {/* Write-time guidance: keeps reviews factual & privacy-safe. Calm, informational — not an alarm. */}
+                    <div className="mb-3 rounded-2xl bg-petrol-50 border border-petrol/15 p-4 flex items-start gap-3">
+                      <span className="grid place-items-center w-9 h-9 rounded-xl bg-petrol text-white shrink-0">
+                        <LineBadgeCheck width="18" height="18" />
+                      </span>
+                      <div className="text-sm text-ink space-y-2 leading-relaxed">
+                        <p>
+                          <span className="font-bold">{t('writeReview.guidance.factTitle')}</span>
+                          <span className="text-muted">{t('writeReview.guidance.factBody')}</span>
+                        </p>
+                        <p>
+                          <span className="font-bold">{t('writeReview.guidance.privacyTitle')}</span>
+                          <span className="text-muted">{t('writeReview.guidance.privacyBody')}</span>
+                        </p>
+                      </div>
+                    </div>
+
                     <textarea
                       value={reviewText}
                       onChange={(e) => setReviewText(e.target.value)}
@@ -659,9 +677,15 @@ export default function WriteReviewPage() {
                       className={`${inputClass} resize-none`}
                       required
                     />
-                    <p className="mt-2 text-sm text-muted">
-                      {reviewText.length}/20 תווים מינימום
-                    </p>
+                    <div className="mt-2 flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+                      <p className="text-sm text-muted flex items-center gap-1.5">
+                        <LineBadgeCheck className="text-petrol shrink-0" width="14" height="14" />
+                        {t('writeReview.guidance.helper')}
+                      </p>
+                      <p className="text-sm text-muted shrink-0">
+                        {reviewText.length}/20 תווים מינימום
+                      </p>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
